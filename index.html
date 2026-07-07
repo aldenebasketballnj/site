@@ -117,6 +117,8 @@ tbody td:first-child { text-align:left; color:var(--chalk); font-weight:600; fon
 .tcard-date { font-size:11px; color:var(--chalk-dim); margin-bottom:12px; }
 
 .view { display:none; } .view.active { display:block; }
+.sort-th { cursor:pointer; user-select:none; transition:color 0.15s; }
+.sort-th:hover { color:var(--gold-light) !important; }
 </style>
 </head>
 <body>
@@ -163,41 +165,38 @@ tbody td:first-child { text-align:left; color:var(--chalk); font-weight:600; fon
   </div>
 
   <div id="page-leaderboard" class="view">
-    <div class="sl">Plus / Minus</div>
+    <div class="sl">Full Leaderboard</div>
     <div class="tbl-wrap">
-      <div class="tbl-hd">Career +/− Leaders</div>
-      <div class="tbl-scroll"><table><thead><tr>
-        <th style="text-align:left;width:28px">#</th>
-        <th style="text-align:left">Player</th>
-        <th>GP</th><th>W</th><th>L</th><th>WIN%</th><th>+/−</th>
-      </tr></thead><tbody id="lb-pm"></tbody></table></div>
-    </div>
-    <div class="sl">Scoring</div>
-    <div class="tbl-wrap">
-      <div class="tbl-hd">Points Per Game</div>
-      <div class="tbl-scroll"><table><thead><tr>
-        <th style="text-align:left;width:28px">#</th>
-        <th style="text-align:left">Player</th>
-        <th>GP</th><th>PTS</th><th>FG%</th><th>3P%</th><th>PPG</th>
-      </tr></thead><tbody id="lb-pts"></tbody></table></div>
-    </div>
-    <div class="sl">Defense</div>
-    <div class="tbl-wrap">
-      <div class="tbl-hd">Steals & Blocks Per Game</div>
-      <div class="tbl-scroll"><table><thead><tr>
-        <th style="text-align:left;width:28px">#</th>
-        <th style="text-align:left">Player</th>
-        <th>GP</th><th>STL</th><th>SPG</th><th>BLK</th><th>BPG</th><th>TOPG</th>
-      </tr></thead><tbody id="lb-def"></tbody></table></div>
-    </div>
-    <div class="sl">Rebounding</div>
-    <div class="tbl-wrap">
-      <div class="tbl-hd">Rebounds & Assists Per Game</div>
-      <div class="tbl-scroll"><table><thead><tr>
-        <th style="text-align:left;width:28px">#</th>
-        <th style="text-align:left">Player</th>
-        <th>GP</th><th>REB</th><th>RPG</th><th>AST</th><th>APG</th>
-      </tr></thead><tbody id="lb-reb"></tbody></table></div>
+      <div class="tbl-hd" style="display:flex;justify-content:space-between;align-items:center">
+        <span>All Players — Click any column header to sort</span>
+        <span style="font-size:10px;color:var(--chalk-dim);font-weight:400">↕ sortable</span>
+      </div>
+      <div class="tbl-scroll">
+        <table id="lb-main-table">
+          <thead>
+            <tr id="lb-header">
+              <th class="sort-th" data-col="rank" style="text-align:left;width:28px;cursor:pointer">#</th>
+              <th class="sort-th" data-col="name" style="text-align:left;cursor:pointer">Player ↕</th>
+              <th class="sort-th" data-col="gp" style="cursor:pointer">GP ↕</th>
+              <th class="sort-th" data-col="w" style="cursor:pointer">W ↕</th>
+              <th class="sort-th" data-col="l" style="cursor:pointer">L ↕</th>
+              <th class="sort-th" data-col="winPct" style="cursor:pointer">WIN% ↕</th>
+              <th class="sort-th" data-col="ppg" style="cursor:pointer">PPG ↕</th>
+              <th class="sort-th" data-col="rpg" style="cursor:pointer">RPG ↕</th>
+              <th class="sort-th" data-col="apg" style="cursor:pointer">APG ↕</th>
+              <th class="sort-th" data-col="spg" style="cursor:pointer">SPG ↕</th>
+              <th class="sort-th" data-col="bpg" style="cursor:pointer">BPG ↕</th>
+              <th class="sort-th" data-col="fgm" style="cursor:pointer">FGM ↕</th>
+              <th class="sort-th" data-col="fgPct" style="cursor:pointer">FG% ↕</th>
+              <th class="sort-th" data-col="threePm" style="cursor:pointer">3PM ↕</th>
+              <th class="sort-th" data-col="threePct" style="cursor:pointer">3P% ↕</th>
+              <th class="sort-th" data-col="topg" style="cursor:pointer">TOPG ↕</th>
+              <th class="sort-th" data-col="pm" style="cursor:pointer">+/− ↕</th>
+            </tr>
+          </thead>
+          <tbody id="lb-main-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -376,11 +375,11 @@ function renderHero() {
   const byApg = [...players].sort((a,b)=>(b.ast/Math.max(b.gp,1))-(a.ast/Math.max(a.gp,1)));
   const byWin = [...players].filter(p=>p.gp>=3).sort((a,b)=>n(b.winPct)-n(a.winPct));
   const cards = [
-    {lbl:'+/− Leader',      val:pm(byPm[0].pm_val),                                  name:byPm[0].name},
     {lbl:'Points / Game',   val:(byPpg[0].pts/Math.max(byPpg[0].gp,1)).toFixed(1),   name:byPpg[0].name},
-    {lbl:'Steals / Game',   val:(bySpg[0].stl/Math.max(bySpg[0].gp,1)).toFixed(1),   name:bySpg[0].name},
     {lbl:'Rebounds / Game', val:(byRpg[0].reb/Math.max(byRpg[0].gp,1)).toFixed(1),   name:byRpg[0].name},
     {lbl:'Assists / Game',  val:(byApg[0].ast/Math.max(byApg[0].gp,1)).toFixed(1),   name:byApg[0].name},
+    {lbl:'Steals / Game',   val:(bySpg[0].stl/Math.max(bySpg[0].gp,1)).toFixed(1),   name:bySpg[0].name},
+    {lbl:'+/− Leader',      val:pm(byPm[0].pm_val),                                  name:byPm[0].name},
     {lbl:'Win Rate',        val:byWin[0]?.winPct||'-',                                name:byWin[0]?.name||'-'},
   ];
   document.getElementById('hero-grid').innerHTML = cards.map(c=>`
@@ -398,13 +397,13 @@ function renderRoster(id) {
       <div class="pcard-bg">${p.gp}</div>
       <div class="pcard-name">${p.name}</div>
       <div class="pcard-meta">${p.gp} GP · ${p.w}W-${p.l}L · ${p.winPct}</div>
-      <div class="pcard-stats" style="grid-template-columns:repeat(3,1fr);gap:6px">
+      <div class="pcard-stats" style="grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px">
         <div class="ms"><span class="ms-v gld">${perG(p.pts,p.gp)}</span><span class="ms-l">PTS</span></div>
-        <div class="ms"><span class="ms-v">${perG(p.reb,p.gp)}</span><span class="ms-l">REB</span></div>
-        <div class="ms"><span class="ms-v">${perG(p.ast,p.gp)}</span><span class="ms-l">AST</span></div>
+        <div class="ms"><span class="ms-v gld">${perG(p.reb,p.gp)}</span><span class="ms-l">REB</span></div>
+        <div class="ms"><span class="ms-v gld">${perG(p.ast,p.gp)}</span><span class="ms-l">AST</span></div>
         <div class="ms"><span class="ms-v">${perG(p.stl,p.gp)}</span><span class="ms-l">STL</span></div>
         <div class="ms"><span class="ms-v">${perG(p.blk,p.gp)}</span><span class="ms-l">BLK</span></div>
-        <div class="ms"><span class="ms-v">${p.fgPct}</span><span class="ms-l">FG%</span></div>
+        <div class="ms"><span class="ms-v">${p.fgm}</span><span class="ms-l">FGM</span></div>
         <div class="ms"><span class="ms-v">${p.threePm}</span><span class="ms-l">3PM</span></div>
         <div class="ms"><span class="ms-v ${p.pm_val>0?'pos':p.pm_val<0?'neg':''}">${pm(p.pm_val)}</span><span class="ms-l">+/−</span></div>
         <div class="ms"><span class="ms-v">${p.winPct}</span><span class="ms-l">WIN%</span></div>
@@ -484,42 +483,85 @@ function closeProfile() {
   document.getElementById('player-profile').style.display='none';
 }
 
+// ── LEADERBOARD SORT STATE ──
+let lbSortCol = 'pm';
+let lbSortAsc = false;
+
 function renderLeaderboard() {
   if (!players.length) return;
+  renderLbTable();
+  // Add click handlers to headers
+  document.querySelectorAll('.sort-th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (lbSortCol === col) { lbSortAsc = !lbSortAsc; }
+      else { lbSortCol = col; lbSortAsc = false; }
+      // Update header arrows
+      document.querySelectorAll('.sort-th').forEach(h => {
+        const base = h.textContent.replace(' ↑','').replace(' ↓','').replace(' ↕','');
+        if (h.dataset.col === lbSortCol) {
+          h.textContent = base + (lbSortAsc ? ' ↑' : ' ↓');
+          h.style.color = 'var(--gold-light)';
+        } else {
+          h.textContent = base + ' ↕';
+          h.style.color = '';
+        }
+      });
+      renderLbTable();
+    });
+  });
+}
+
+function lbVal(p, col) {
+  const gp = Math.max(p.gp, 1);
+  switch(col) {
+    case 'name':    return p.name;
+    case 'gp':      return p.gp;
+    case 'w':       return p.w;
+    case 'l':       return p.l;
+    case 'winPct':  return n(p.winPct);
+    case 'ppg':     return p.pts/gp;
+    case 'rpg':     return p.reb/gp;
+    case 'apg':     return p.ast/gp;
+    case 'spg':     return p.stl/gp;
+    case 'bpg':     return p.blk/gp;
+    case 'fgm':     return p.fgm;
+    case 'fgPct':   return n(p.fgPct);
+    case 'threePm': return p.threePm;
+    case 'threePct':return n(p.threePct);
+    case 'topg':    return p.to/gp;
+    case 'pm':      return p.pm_val;
+    default:        return p.pm_val;
+  }
+}
+
+function renderLbTable() {
+  const sorted = [...players].sort((a,b) => {
+    const av = lbVal(a, lbSortCol);
+    const bv = lbVal(b, lbSortCol);
+    if (typeof av === 'string') return lbSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return lbSortAsc ? av - bv : bv - av;
+  });
   const rc = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
-
-  const byPm = [...players].sort((a,b)=>b.pm_val-a.pm_val);
-  document.getElementById('lb-pm').innerHTML = byPm.map((p,i)=>`<tr>
+  const gp = p => Math.max(p.gp,1);
+  document.getElementById('lb-main-body').innerHTML = sorted.map((p,i) => `<tr>
     <td class="lrank ${rc(i)}">${i+1}</td>
-    <td class="tlink" onclick="goPlayer('${esc(p.name)}')">${p.name}</td>
-    <td>${p.gp}</td><td>${p.w}</td><td>${p.l}</td><td>${p.winPct}</td>
-    <td class="${pmc(p.pm_val)}">${pm(p.pm_val)}</td>
-  </tr>`).join('');
-
-  const byPpg = [...players].sort((a,b)=>(b.pts/Math.max(b.gp,1))-(a.pts/Math.max(a.gp,1)));
-  document.getElementById('lb-pts').innerHTML = byPpg.map((p,i)=>`<tr>
-    <td class="lrank ${rc(i)}">${i+1}</td>
-    <td class="tlink" onclick="goPlayer('${esc(p.name)}')">${p.name}</td>
-    <td>${p.gp}</td><td>${p.pts}</td><td>${p.fgPct}</td><td>${p.threePct}</td>
+    <td class="tlink" style="text-align:left" onclick="goPlayer('${esc(p.name)}')">${p.name}</td>
+    <td>${p.gp}</td>
+    <td>${p.w}</td>
+    <td>${p.l}</td>
+    <td>${p.winPct}</td>
     <td class="tg">${perG(p.pts,p.gp)}</td>
-  </tr>`).join('');
-
-  const bySpg = [...players].sort((a,b)=>(b.stl/Math.max(b.gp,1))-(a.stl/Math.max(a.gp,1)));
-  document.getElementById('lb-def').innerHTML = bySpg.map((p,i)=>`<tr>
-    <td class="lrank ${rc(i)}">${i+1}</td>
-    <td class="tlink" onclick="goPlayer('${esc(p.name)}')">${p.name}</td>
-    <td>${p.gp}</td><td>${p.stl}</td>
-    <td class="tg">${perG(p.stl,p.gp)}</td>
-    <td>${p.blk}</td><td>${perG(p.blk,p.gp)}</td><td>${perG(p.to,p.gp)}</td>
-  </tr>`).join('');
-
-  const byRpg = [...players].sort((a,b)=>(b.reb/Math.max(b.gp,1))-(a.reb/Math.max(a.gp,1)));
-  document.getElementById('lb-reb').innerHTML = byRpg.map((p,i)=>`<tr>
-    <td class="lrank ${rc(i)}">${i+1}</td>
-    <td class="tlink" onclick="goPlayer('${esc(p.name)}')">${p.name}</td>
-    <td>${p.gp}</td><td>${p.reb}</td>
-    <td class="tg">${perG(p.reb,p.gp)}</td>
-    <td>${p.ast}</td><td>${perG(p.ast,p.gp)}</td>
+    <td>${perG(p.reb,p.gp)}</td>
+    <td>${perG(p.ast,p.gp)}</td>
+    <td>${perG(p.stl,p.gp)}</td>
+    <td>${perG(p.blk,p.gp)}</td>
+    <td>${p.fgm}</td>
+    <td>${p.fgPct}</td>
+    <td>${p.threePm}</td>
+    <td>${p.threePct}</td>
+    <td>${perG(p.to,p.gp)}</td>
+    <td class="${pmc(p.pm_val)}">${pm(p.pm_val)}</td>
   </tr>`).join('');
 }
 
