@@ -299,29 +299,37 @@ function buildPlayer(row) {
   const low = name.toLowerCase();
   if (low==='player'||low==='name'||low.includes('total')||low==='') return null;
 
-  const gp  = n(get(row,'GP','G'));
+  const gp  = n(get(row,'GP','G','Games','Games Played'));
   if (gp === 0) return null;
+
+  // Log first player's keys so we can see exact column names
+  if (!window._colsLogged) { window._colsLogged = true; console.log('Sheet columns:', Object.keys(row)); }
+
+  // Detect if sheet stores totals or per-game averages
+  const hasPTS  = !!(row['PTS']||row['Points']||row['Pts']);
+  const hasPPG  = !!(row['PPG']);
+  const gpVal   = gp;
 
   return {
     name,
     gp,
-    pts:     n(get(row,'PTS','Points')),
-    fgm:     n(get(row,'FGM')),
-    fga:     n(get(row,'FGA')),
-    fgPct:   get(row,'FG%','FG') || '0%',
-    threePm: n(get(row,'3PM')),
-    threePA: n(get(row,'3PA')),
-    threePct:get(row,'3P%','3P') || '0%',
-    reb:     n(get(row,'REBS','REB','Rebounds')),
-    ast:     n(get(row,'AST','Assists')),
-    stl:     n(get(row,'STL','Steals')),
-    blk:     n(get(row,'BLK','Blocks')),
-    to:      n(get(row,'TO','Turnovers')),
-    pm_val:  n(get(row,'+/-','+/−','PM')),
-    w:       n(get(row,'W','Wins')),
-    l:       n(get(row,'L','Losses')),
-    winPct:  get(row,'WIN%','W%') || '0%',
-    potg:    n(get(row,'PotG','POTG')),
+    pts:     hasPPG && !hasPTS ? n(get(row,'PPG'))*gpVal : n(get(row,'PTS','Points','Pts','PPG')),
+    fgm:     n(get(row,'FGM','Fgm')),
+    fga:     n(get(row,'FGA','Fga')),
+    fgPct:   get(row,'FG%','FG%','Fg%','fg%') || '0%',
+    threePm: n(get(row,'3PM','3Pm','3pm')),
+    threePA: n(get(row,'3PA','3Pa','3pa')),
+    threePct:get(row,'3P%','3p%','3P%') || '0%',
+    reb:     n(get(row,'REBS','REB','Reb','Rebounds','rebs','RPG')) * (row['RPG'] && !row['REBS'] && !row['REB'] ? gpVal : 1),
+    ast:     n(get(row,'AST','Ast','Assists','ast','APG')) * (row['APG'] && !row['AST'] ? gpVal : 1),
+    stl:     n(get(row,'STL','Stl','Steals','stl','SPG')) * (row['SPG'] && !row['STL'] ? gpVal : 1),
+    blk:     n(get(row,'BLK','Blk','Blocks','blk','BPG')) * (row['BPG'] && !row['BLK'] ? gpVal : 1),
+    to:      n(get(row,'TO','To','Turnovers','to')),
+    pm_val:  n(get(row,'+/-','+/−','PM','+/ -','+/ −')),
+    w:       n(get(row,'W','Wins','w')),
+    l:       n(get(row,'L','Losses','l')),
+    winPct:  get(row,'WIN%','W%','Win%','win%') || '0%',
+    potg:    n(get(row,'PotG','POTG','potg')),
   };
 }
 
@@ -363,10 +371,16 @@ function renderRoster(id) {
       <div class="pcard-bg">${p.gp}</div>
       <div class="pcard-name">${p.name}</div>
       <div class="pcard-meta">${p.gp} GP · ${p.w}W-${p.l}L · ${p.winPct}</div>
-      <div class="pcard-stats">
-        <div class="ms"><span class="ms-v gld">${pm(p.pm_val)}</span><span class="ms-l">+/−</span></div>
-        <div class="ms"><span class="ms-v">${perG(p.pts,p.gp)}</span><span class="ms-l">PPG</span></div>
+      <div class="pcard-stats" style="grid-template-columns:repeat(3,1fr);gap:6px">
+        <div class="ms"><span class="ms-v gld">${perG(p.pts,p.gp)}</span><span class="ms-l">PTS</span></div>
+        <div class="ms"><span class="ms-v">${perG(p.reb,p.gp)}</span><span class="ms-l">REB</span></div>
+        <div class="ms"><span class="ms-v">${perG(p.ast,p.gp)}</span><span class="ms-l">AST</span></div>
+        <div class="ms"><span class="ms-v">${perG(p.stl,p.gp)}</span><span class="ms-l">STL</span></div>
+        <div class="ms"><span class="ms-v">${perG(p.blk,p.gp)}</span><span class="ms-l">BLK</span></div>
         <div class="ms"><span class="ms-v">${p.fgPct}</span><span class="ms-l">FG%</span></div>
+        <div class="ms"><span class="ms-v">${p.threePm}</span><span class="ms-l">3PM</span></div>
+        <div class="ms"><span class="ms-v ${p.pm_val>0?'pos':p.pm_val<0?'neg':''}">${pm(p.pm_val)}</span><span class="ms-l">+/−</span></div>
+        <div class="ms"><span class="ms-v">${p.winPct}</span><span class="ms-l">WIN%</span></div>
       </div>
     </div>`).join('');
 }
