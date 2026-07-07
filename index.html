@@ -149,14 +149,32 @@ tbody td:first-child { text-align:left; color:var(--chalk); font-weight:600; fon
   <div id="page-home" class="view active">
     <div class="sl">Circuit Leaders</div>
     <div id="hero-grid" class="hero-grid"></div>
-    <div class="sl">All Players</div>
-    <div id="home-roster" class="roster-grid"></div>
   </div>
 
   <div id="page-players" class="view">
     <div id="players-list">
       <div class="sl">Player Roster</div>
+      <div style="margin-bottom:16px">
+        <input
+          id="player-search"
+          type="text"
+          placeholder="Search player by name..."
+          oninput="filterPlayers(this.value)"
+          style="
+            width:100%; padding:12px 16px;
+            background:var(--panel); border:1px solid var(--border);
+            border-radius:10px; color:var(--chalk);
+            font-family:'Barlow',sans-serif; font-size:14px;
+            outline:none; transition:border-color 0.15s;
+          "
+          onfocus="this.style.borderColor='var(--gold)'"
+          onblur="this.style.borderColor='var(--border)'"
+        />
+      </div>
       <div id="players-roster" class="roster-grid"></div>
+      <div id="no-results" style="display:none;text-align:center;padding:40px;color:var(--chalk-dim);font-family:'Barlow Condensed',sans-serif;font-size:18px;letter-spacing:0.1em">
+        NO PLAYERS FOUND
+      </div>
     </div>
     <div id="player-profile" style="display:none">
       <button class="back-btn" onclick="closeProfile()">← All Players</button>
@@ -361,8 +379,22 @@ function buildPlayer(row) {
 
 // ── RENDER ──
 function renderAll() {
-  renderHero(); renderRoster('home-roster'); renderRoster('players-roster');
+  renderHero(); renderRoster('players-roster');
   renderLeaderboard(); renderTournaments();
+}
+
+// ── SEARCH / FILTER ──
+function filterPlayers(query) {
+  const q = query.toLowerCase().trim();
+  const cards = document.querySelectorAll('#players-roster .pcard');
+  let visible = 0;
+  cards.forEach(card => {
+    const name = card.querySelector('.pcard-name').textContent.toLowerCase();
+    const show = !q || name.includes(q);
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
 }
 
 function renderHero() {
@@ -374,13 +406,20 @@ function renderHero() {
   const byRpg = [...players].sort((a,b)=>(b.reb/Math.max(b.gp,1))-(a.reb/Math.max(a.gp,1)));
   const byApg = [...players].sort((a,b)=>(b.ast/Math.max(b.gp,1))-(a.ast/Math.max(a.gp,1)));
   const byWin = [...players].filter(p=>p.gp>=3).sort((a,b)=>n(b.winPct)-n(a.winPct));
+  const byBpg  = [...players].sort((a,b)=>(b.blk/Math.max(b.gp,1))-(a.blk/Math.max(a.gp,1)));
+  const byFgp  = [...players].filter(p=>p.fga>0).sort((a,b)=>n(b.fgPct)-n(a.fgPct));
+  const by3pp  = [...players].filter(p=>p.threePA>0).sort((a,b)=>n(b.threePct)-n(a.threePct));
+  const byWins = [...players].sort((a,b)=>b.w-a.w);
   const cards = [
     {lbl:'Points / Game',   val:(byPpg[0].pts/Math.max(byPpg[0].gp,1)).toFixed(1),   name:byPpg[0].name},
     {lbl:'Rebounds / Game', val:(byRpg[0].reb/Math.max(byRpg[0].gp,1)).toFixed(1),   name:byRpg[0].name},
     {lbl:'Assists / Game',  val:(byApg[0].ast/Math.max(byApg[0].gp,1)).toFixed(1),   name:byApg[0].name},
     {lbl:'Steals / Game',   val:(bySpg[0].stl/Math.max(bySpg[0].gp,1)).toFixed(1),   name:bySpg[0].name},
+    {lbl:'Blocks / Game',   val:(byBpg[0].blk/Math.max(byBpg[0].gp,1)).toFixed(1),   name:byBpg[0].name},
+    {lbl:'FG%',             val:byFgp[0]?.fgPct||'-',                                 name:byFgp[0]?.name||'-'},
+    {lbl:'3-Point%',        val:by3pp[0]?.threePct||'-',                              name:by3pp[0]?.name||'-'},
+    {lbl:'Most Wins',       val:byWins[0].w,                                          name:byWins[0].name},
     {lbl:'+/− Leader',      val:pm(byPm[0].pm_val),                                  name:byPm[0].name},
-    {lbl:'Win Rate',        val:byWin[0]?.winPct||'-',                                name:byWin[0]?.name||'-'},
   ];
   document.getElementById('hero-grid').innerHTML = cards.map(c=>`
     <div class="hcard">
