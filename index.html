@@ -147,6 +147,45 @@ tbody td:first-child { text-align:left; color:var(--chalk); font-weight:600; fon
   <div id="err" class="err"></div>
 
   <div id="page-home" class="view active">
+    <div id="home-hero" style="
+      position:relative; overflow:hidden;
+      background:var(--panel);
+      border-bottom:1px solid var(--border);
+      margin:-22px -14px 28px;
+      padding:60px 20px 50px;
+      text-align:center;
+    ">
+      <!-- Court arc background -->
+      <div style="
+        position:absolute; bottom:-60px; left:50%; transform:translateX(-50%);
+        width:500px; height:350px;
+        border:1.5px solid rgba(200,144,42,0.12); border-radius:50%;
+        pointer-events:none;
+      "></div>
+      <div style="
+        position:absolute; top:0; left:50%; transform:translateX(-50%);
+        width:1px; height:100%;
+        background:rgba(200,144,42,0.06);
+        pointer-events:none;
+      "></div>
+      <div style="
+        position:absolute; top:0; bottom:0; left:50%; transform:translateX(-50%);
+        width:260px;
+        border-left:1.5px solid rgba(200,144,42,0.07);
+        border-right:1.5px solid rgba(200,144,42,0.07);
+        pointer-events:none;
+      "></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:14px">
+        Est. 2018 · Roselle Park, NJ
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(52px,12vw,96px);font-weight:900;line-height:0.9;text-transform:uppercase;letter-spacing:-0.01em;margin-bottom:18px">
+        <div style="color:var(--chalk)">Aldene</div>
+        <div style="color:var(--gold)">Basketball</div>
+      </div>
+      <div style="font-size:15px;color:var(--chalk-mid);letter-spacing:0.04em">
+        Player Stats · Tournament History · Awards
+      </div>
+    </div>
     <div class="sl">Circuit Leaders</div>
     <div id="hero-grid" class="hero-grid"></div>
   </div>
@@ -627,44 +666,118 @@ function renderTournaments() {
 
 function openTourney(key) {
   const t = TABS[key];
-  const rows = (tourneyData[key]||[]).filter(r=>{
-    const name=r[Object.keys(r)[0]]||'';
-    return name.length>1&&!name.toLowerCase().includes('total')&&!name.toLowerCase().includes('player');
-  }).sort((a,b)=>n(get(b,'+/-','+/−','PM'))-n(get(a,'+/-','+/−','PM')));
+  const raw = tourneyData[key] || [];
 
-  const body = rows.length===0
-    ? '<div style="padding:16px 18px;color:var(--chalk-dim);font-size:13px">Stats not available yet.</div>'
-    : `<div class="tbl-scroll"><table>
-        <thead><tr>
-          <th style="text-align:left">Player</th>
-          <th>GP</th><th>PPG</th><th>FG%</th><th>3P%</th>
-          <th>RPG</th><th>APG</th><th>SPG</th><th>TOPG</th><th>+/−</th><th>W-L</th><th>WIN%</th>
-        </tr></thead><tbody>
-        ${rows.map(r=>{
-          const name=r[Object.keys(r)[0]];
-          const rgp=n(get(r,'GP','G'))||1;
-          const rpm=n(get(r,'+/-','+/−','PM'));
-          return `<tr>
-            <td class="tlink" onclick="goPlayer('${esc(name)}')">${name}</td>
-            <td>${rgp}</td>
-            <td>${perG(n(get(r,'PTS','Points')),rgp)}</td>
-            <td>${get(r,'FG%','FG')||'-'}</td>
-            <td>${get(r,'3P%','3P')||'-'}</td>
-            <td>${perG(n(get(r,'REBS','REB')),rgp)}</td>
-            <td>${perG(n(get(r,'AST')),rgp)}</td>
-            <td>${perG(n(get(r,'STL')),rgp)}</td>
-            <td>${perG(n(get(r,'TO')),rgp)}</td>
-            <td class="${pmc(rpm)}">${pm(rpm)}</td>
-            <td>${get(r,'W')||0}-${get(r,'L')||0}</td>
-            <td>${get(r,'WIN%','W%')||'-'}</td>
-          </tr>`;
-        }).join('')}
-        </tbody></table></div>`;
+  // Filter out header/total rows
+  const rows = raw.filter(r => {
+    const name = r[Object.keys(r)[0]] || '';
+    const low = name.toLowerCase();
+    return name.length > 1
+      && !low.includes('total')
+      && !low.includes('player')
+      && !low.includes('name');
+  }).sort((a,b) => n(get(b,'+/-','+/−','PM')) - n(get(a,'+/-','+/−','PM')));
+
+  let body = '';
+  if (!rows.length) {
+    body = '<div style="padding:20px;color:var(--chalk-dim);font-size:13px">Stats not available yet for this tournament.</div>';
+  } else {
+    // Detect all available columns from first row
+    const sampleKeys = Object.keys(rows[0]);
+    console.log('Tournament columns:', sampleKeys);
+
+    const tableRows = rows.map(r => {
+      const nameKey = Object.keys(r)[0];
+      const name = r[nameKey] || '';
+      const rgp  = n(get(r,'GP','G')) || 1;
+      const rpts = n(get(r,'PTS','Points','Pts'));
+      const rreb = n(get(r,'REBS','REB','Reb'));
+      const rast = n(get(r,'AST','Ast'));
+      const rstl = n(get(r,'STL','Stl'));
+      const rblk = n(get(r,'BLK','Blk'));
+      const rfgm = n(get(r,'FGM','Fgm'));
+      const rfga = n(get(r,'FGA','Fga'));
+      const r3pm = n(get(r,'3PM','3Pm'));
+      const r3pa = n(get(r,'3PA','3Pa'));
+      const rto  = n(get(r,'TO','To'));
+      const rpm  = n(get(r,'+/-','+/−','PM'));
+      const rw   = get(r,'W') || '0';
+      const rl   = get(r,'L') || '0';
+      const rfgpct  = get(r,'FG%','Fg%') || '-';
+      const r3pct   = get(r,'3P%','3P%','3p%') || '-';
+      const rwinpct = get(r,'WIN%','W%','Win%') || '-';
+
+      return `<tr>
+        <td class="tlink" style="text-align:left" onclick="goPlayer('${esc(name)}')">${name}</td>
+        <td>${rgp}</td>
+        <td class="tg">${perG(rpts,rgp)}</td>
+        <td>${perG(rreb,rgp)}</td>
+        <td>${perG(rast,rgp)}</td>
+        <td>${perG(rstl,rgp)}</td>
+        <td>${perG(rblk,rgp)}</td>
+        <td>${rfgm}</td>
+        <td>${rfgpct}</td>
+        <td>${r3pm}</td>
+        <td>${r3pct}</td>
+        <td>${perG(rto,rgp)}</td>
+        <td class="${pmc(rpm)}">${pm(rpm)}</td>
+        <td>${rw}-${rl}</td>
+        <td>${rwinpct}</td>
+      </tr>`;
+    }).join('');
+
+    body = `<div class="tbl-scroll"><table>
+      <thead><tr>
+        <th style="text-align:left">Player</th>
+        <th>GP</th>
+        <th>PPG</th>
+        <th>RPG</th>
+        <th>APG</th>
+        <th>SPG</th>
+        <th>BPG</th>
+        <th>FGM</th>
+        <th>FG%</th>
+        <th>3PM</th>
+        <th>3P%</th>
+        <th>TOPG</th>
+        <th>+/−</th>
+        <th>W-L</th>
+        <th>WIN%</th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table></div>`;
+  }
 
   document.getElementById('tourney-content').innerHTML = `
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(22px,5vw,42px);font-weight:900;text-transform:uppercase;margin-bottom:4px">${t.label}</div>
-    <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:16px">${t.date}</div>
-    <div class="tbl-wrap"><div class="tbl-hd">Player Stats — Sorted by +/−</div>${body}</div>`;
+    <div style="
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:13px; padding:22px; margin-bottom:14px;
+      position:relative; overflow:hidden;
+    ">
+      <div style="
+        position:absolute; top:-10px; right:-10px;
+        font-family:'Barlow Condensed',sans-serif;
+        font-size:120px; font-weight:900;
+        color:rgba(200,144,42,0.05); line-height:1;
+        pointer-events:none;
+      ">${rows.length}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(24px,5vw,44px);font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px">${t.label}</div>
+      <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:16px">${t.date} · ${rows.length} Players</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="background:rgba(200,144,42,0.08);border:1px solid rgba(200,144,42,0.2);border-radius:8px;padding:10px 16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--gold-light)">${rows.length}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--chalk-dim)">Players</div>
+        </div>
+        <div style="background:rgba(200,144,42,0.08);border:1px solid rgba(200,144,42,0.2);border-radius:8px;padding:10px 16px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--gold-light)">${rows.length > 0 ? rows.reduce((max,r)=>Math.max(max,n(get(r,'GP','G'))),0) : '-'}</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--chalk-dim)">Max GP</div>
+        </div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-hd">Player Stats — Sorted by +/−</div>
+      ${body}
+    </div>`;
 
   document.getElementById('tournaments-list').style.display='none';
   document.getElementById('tournament-detail').style.display='block';
