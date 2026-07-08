@@ -230,7 +230,7 @@ body.light-mode nav{background:#F5F3EE;}
 <script>
 // ── CONFIG ──
 const SHEET_ID = '1lh5lyY2hhbqYtyjApaVialR4POoN_dHedYrzVws7D24';
-const PUB_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRb8iGaCarUyV4KcE2gSlRhnPc8drrIEAdrvHl-QRtYjW1UqK2lLUqPC4-6E-Cb0Ra9mYanzNBOOtXd/pub';
+const PUB_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR68Vhawf_2ReKG-4Hb4shvH4Ug9mFSgx58Re0WbgFY9qPv3MuVoiwT4847feFrXCVOtw79hMxpMiZ9/pub';
 const AVG_GID  = '2125627346';
 const TABS = {
   VJC_I:   { statsGid:'237216492',  gameGid:'1626881344', label:'VJC I',        date:'Dec 22, 2024' },
@@ -268,18 +268,7 @@ async function fetchSheet(gid) {
       }
     }
   } catch(e) { console.warn('corsproxy failed:', e.message); }
-  // opensheet fallback
-  try {
-    const r = await fetch('https://opensheet.elk.sh/' + SHEET_ID + '/' + gid);
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j) && j.length > 0) {
-        console.log('opensheet OK gid=' + gid);
-        return j.map(row => { const o={}; Object.keys(row).forEach(k=>o[k]=String(row[k]||'')); return o; });
-      }
-    }
-  } catch(e) { console.warn('opensheet failed:', e.message); }
-  throw new Error('All fetch methods failed for gid=' + gid);
+  throw new Error('All fetch methods failed for gid=' + gid + '. Direct and corsproxy both failed.');
 }
 
 // ── CSV PARSER ──
@@ -594,12 +583,23 @@ function openTourney(key) {
   // Col12=3PM, Col13=3PA, Col14=3FG%  (Col15=W, Col16=L, Col17=WIN%)
   let avgBody='', curStyle=FALLBACK_STYLES[0], playerCount=0;
 
-  raw.forEach(r=>{
+  raw.forEach((r,rowIdx)=>{
     const rkeys=Object.keys(r);
-    const pos=(i)=>String(r[rkeys[i]]||'').trim();
+    if (!rkeys.length) return;
+
+    // pos(i) gets value at column position i regardless of header name
+    const pos=(i)=>{ const k=rkeys[i]; return k!==undefined?String(r[k]||'').trim():''; };
+
+    // The stats tabs export with the tournament title as the FIRST column header
+    // and data columns may have empty string keys or proper names like GP, PPG etc
+    // So we ALWAYS use positional parsing as primary, named as fallback
     const name=pos(0);
     if (!name) return;
-    if (name.toUpperCase()==='TOTALS'||name.toUpperCase()==='TOTAL') return;
+    const nameUp=name.toUpperCase();
+    if (nameUp==='TOTALS'||nameUp==='TOTAL'||nameUp==='GROUP AVERAGE'||nameUp.includes('AVERAGE')||nameUp==='PLAYER') return;
+
+    // Log first few rows to console for debugging
+    if (rowIdx < 4) console.log('Tourney row '+rowIdx+':', JSON.stringify(r));
 
     if (isTeamRow(name)) {
       const ts=teamStyle(name)||FALLBACK_STYLES[fbIdx++%FALLBACK_STYLES.length];
@@ -607,23 +607,28 @@ function openTourney(key) {
       avgBody+=`<tr><td colspan="15" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:${ts.label};padding:12px 16px;">${name}</td></tr>`;
     } else {
       playerCount++;
-      // Try named cols, fall back to positional
-      const gv=(named,posI)=>sg(r,named)||pos(posI);
-      const rgp  =parseFloat(gv('GP',1))||1;
-      const rppg =parseFloat(gv('PPG',2))||0;
-      const rrpg =parseFloat(gv('RPG',3))||0;
-      const rapg =parseFloat(gv('APG',4))||0;
-      const rspg =parseFloat(gv('SPG',5))||0;
-      const rbpg =parseFloat(gv('BPG',6))||0;
-      const rtopg=parseFloat(gv('TOPG',7))||0;
-      const rpm  =n(gv('+/\u2212',8)||gv('+/-',8));
-      const rfgm =gv('FGM',9)||'0';
-      const rfgpct=gv('FG%',11)||'-';
-      const r3pm =gv('3PM',12)||'0';
-      const r3pct=gv('3FG%',14)||gv('3P%',14)||'-';
-      const rw   =gv('W',15)||'0';
-      const rl   =gv('L',16)||'0';
-      const rwpct=gv('WIN%',17)||gv('W%',17)||'-';
+
+      // POSITIONAL parsing — matches sheet layout from screenshot:
+      // col0=Name, col1=GP, col2=PPG, col3=RPG, col4=APG, col5=SPG
+      // col6=BPG, col7=TOPG, col8=+/-, col9=FGM, col10=FGA
+      // col11=FG%, col12=3PM, col13=3PA, col14=3FG%
+      // col15=W, col16=L, col17=WIN%
+      const pf=(i)=>parseFloat(pos(i))||0;
+      const rgp  =pf(1)||1;
+      const rppg =pf(2);
+      const rrpg =pf(3);
+      const rapg =pf(4);
+      const rspg =pf(5);
+      const rbpg =pf(6);
+      const rtopg=pf(7);
+      const rpm  =n(pos(8));
+      const rfgm =pos(9)||'0';
+      const rfgpct=pos(11)||'-';
+      const r3pm =pos(12)||'0';
+      const r3pct=pos(14)||'-';
+      const rw   =pos(15)||'0';
+      const rl   =pos(16)||'0';
+      const rwpct=pos(17)||'-';
 
       avgBody+=`<tr style="background:${curStyle.bg}">
         <td class="tlink" style="text-align:left;padding-left:28px" onclick="goPlayer('${esc(name)}')">${name}</td>
@@ -638,6 +643,20 @@ function openTourney(key) {
       </tr>`;
     }
   });
+
+  // Visible debug panel - collapsible, shows raw data from sheet
+  let debugPanel = '';
+  if (raw.length > 0) {
+    const firstKeys = Object.keys(raw[0]);
+    const sampleRows = raw.slice(0,4).map((r,i)=>`<div style="margin-bottom:4px;"><b>Row ${i}:</b> ${JSON.stringify(r).substring(0,250)}</div>`).join('');
+    debugPanel = `<details style="margin-bottom:12px;">
+      <summary style="cursor:pointer;color:var(--gold);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;padding:8px 0;">▶ Debug: Raw Sheet Data (${raw.length} rows loaded)</summary>
+      <div style="background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:6px;font-size:10px;color:var(--chalk-dim);font-family:monospace;word-break:break-all;line-height:1.7;overflow-x:auto;">
+        <div style="margin-bottom:8px;"><b style="color:var(--gold-light)">Columns (${firstKeys.length}):</b> ${JSON.stringify(firstKeys)}</div>
+        ${sampleRows}
+      </div>
+    </details>`;
+  }
 
   const avgTable=`<div class="tbl-scroll"><table>
     <thead><tr>
@@ -657,7 +676,7 @@ function openTourney(key) {
     </div>
     <div class="sl">Tournament Averages</div>
     <div class="tbl-wrap" style="margin-bottom:24px">
-      <div class="tbl-hd">Per Game Averages — Grouped by Team</div>${avgTable}
+      <div class="tbl-hd">Per Game Averages — Grouped by Team</div>${debugPanel}${avgTable}
     </div>
     <div class="sl">Game by Game Stats</div>
     <div id="game-log-section">
@@ -692,13 +711,17 @@ function openTourney(key) {
       const teams=[];
       let curTeam=null, curTs=FALLBACK_STYLES[0], fbi=0;
 
-      gameRows.forEach(row=>{
+      gameRows.forEach((row,ri)=>{
         const cellName=String(row[gameCol]||'').trim();
         if (!cellName) return;
         const upper=cellName.toUpperCase();
-        if (upper.includes('GAME')||upper.includes('TOTALS')||upper==='TOTAL') return;
 
-        if (upper.startsWith('TEAM ')||upper==='GLADIATORS'||upper==='NUTCRACKERS') {
+        // Log first few rows
+        if (ri < 3) console.log('Game row '+ri+':', JSON.stringify(row));
+
+        if (upper.includes('GAME')||upper==='TOTALS'||upper==='TOTAL') return;
+
+        if (upper.startsWith('TEAM ')||upper==='GLADIATORS'||upper==='NUTCRACKERS'||upper.startsWith('TEAM VIJAY')) {
           curTs=teamStyle(cellName)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
           curTeam={name:cellName,style:curTs,players:[]};
           teams.push(curTeam);
@@ -706,10 +729,16 @@ function openTourney(key) {
         }
         if (!curTeam) { curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]}; teams.push(curTeam); }
 
-        // Get stats positionally from columns after gameCol
+        // Get stats positionally from columns AFTER gameCol
+        // Layout: name, FGM, FGA, FG%, PTS, 3PM, 3PA, 3P%, REBS, AST, STL, BLK, TO, +/-
         const p=(offset)=>{ const c=allCols[colIdx+offset]; return c?clean(String(row[c]||'').trim()):'-'; };
         const ppm=n(p(13));
-        curTeam.players.push({name:cellName,fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),tpm:p(5),tpa:p(6),tpct:p(7),reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:ppm});
+        curTeam.players.push({
+          name:cellName,
+          fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),
+          tpm:p(5),tpa:p(6),tpct:p(7),
+          reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:ppm
+        });
       });
 
       const teamsHtml=teams.map(team=>{
