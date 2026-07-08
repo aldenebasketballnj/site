@@ -63,12 +63,12 @@ main { max-width:1140px; margin:0 auto; padding:22px 14px 80px; }
 
 .err { background:rgba(192,57,43,0.1); border:1px solid rgba(192,57,43,0.3); border-radius:8px; padding:16px 18px; font-size:13px; color:#e74c3c; margin-bottom:18px; display:none; line-height:1.6; }
 
-.hero-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:9px; margin-bottom:26px; }
-.hcard { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 14px; position:relative; overflow:hidden; }
-.hcard::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--gold); }
-.hcard-lbl { font-family:'Barlow Condensed',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--chalk-dim); margin-bottom:5px; }
-.hcard-val { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:900; color:var(--gold-light); line-height:1; margin-bottom:3px; }
-.hcard-name { font-size:12px; font-weight:600; color:var(--chalk); }
+.hero-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:32px; }
+.hcard { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:28px 22px; position:relative; overflow:hidden; }
+.hcard::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gold); }
+.hcard-lbl { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--chalk-dim); margin-bottom:8px; }
+.hcard-val { font-family:'Barlow Condensed',sans-serif; font-size:52px; font-weight:900; color:var(--gold-light); line-height:1; margin-bottom:6px; }
+.hcard-name { font-size:14px; font-weight:600; color:var(--chalk); }
 
 .roster-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:11px; margin-bottom:26px; }
 .pcard { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:17px; cursor:pointer; transition:all 0.18s; position:relative; overflow:hidden; }
@@ -119,6 +119,26 @@ tbody td:first-child { text-align:left; color:var(--chalk); font-weight:600; fon
 .view { display:none; } .view.active { display:block; }
 .sort-th { cursor:pointer; user-select:none; transition:color 0.15s; }
 .sort-th:hover { color:var(--gold-light) !important; }
+
+/* LIGHT MODE */
+body.light-mode {
+  --black: #F5F3EE;
+  --panel: #FFFFFF;
+  --panel2: #F0EDE8;
+  --border: #DDD9D0;
+  --chalk: #1a1a1a;
+  --chalk-mid: #5a5650;
+  --chalk-dim: #9a9690;
+  --gold: #9a6e1a;
+  --gold-light: #C8902A;
+  --gold-dim: rgba(154,110,26,0.12);
+  --green: #1a7a42;
+  --red: #a02020;
+}
+body.light-mode header { background:#FFFFFF; }
+body.light-mode nav { background:#F5F3EE; }
+body.light-mode #site-footer { background:#FFFFFF; }
+body.light-mode #home-hero { background:#FFFFFF !important; }
 </style>
 </head>
 <body>
@@ -686,26 +706,41 @@ function openTourney(key) {
     const sampleKeys = Object.keys(rows[0]);
     console.log('Tournament columns:', sampleKeys);
 
+    // Log all keys from first row for debugging
+    if (rows.length > 0) console.log('TOURNEY ROW KEYS:', JSON.stringify(Object.keys(rows[0])), 'SAMPLE:', JSON.stringify(rows[0]));
+
     const tableRows = rows.map(r => {
-      const nameKey = Object.keys(r)[0];
+      const allKeys = Object.keys(r);
+      const nameKey = allKeys[0];
       const name = r[nameKey] || '';
-      const rgp  = n(get(r,'GP','G')) || 1;
-      const rpts = n(get(r,'PTS','Points','Pts'));
-      const rreb = n(get(r,'REBS','REB','Reb'));
-      const rast = n(get(r,'AST','Ast'));
-      const rstl = n(get(r,'STL','Stl'));
-      const rblk = n(get(r,'BLK','Blk'));
-      const rfgm = n(get(r,'FGM','Fgm'));
-      const rfga = n(get(r,'FGA','Fga'));
-      const r3pm = n(get(r,'3PM','3Pm'));
-      const r3pa = n(get(r,'3PA','3Pa'));
-      const rto  = n(get(r,'TO','To'));
-      const rpm  = n(get(r,'+/-','+/−','PM'));
-      const rw   = get(r,'W') || '0';
-      const rl   = get(r,'L') || '0';
-      const rfgpct  = get(r,'FG%','Fg%') || '-';
-      const r3pct   = get(r,'3P%','3P%','3p%') || '-';
-      const rwinpct = get(r,'WIN%','W%','Win%') || '-';
+
+      // Smart getter that does case-insensitive + partial match
+      const smartGet = (...variants) => {
+        for (const v of variants) {
+          // exact match first
+          if (r[v] !== undefined && r[v] !== '') return r[v];
+          // case-insensitive match
+          const found = allKeys.find(k => k.toLowerCase() === v.toLowerCase());
+          if (found && r[found] !== '') return r[found];
+        }
+        return '';
+      };
+
+      const rgp  = n(smartGet('GP','G','Games')) || 1;
+      const rpts = n(smartGet('PTS','Points','Pts','PPG')) * (smartGet('PPG') && !smartGet('PTS') ? rgp : 1);
+      const rreb = n(smartGet('REBS','REB','Reb','Rebounds','RPG')) * (smartGet('RPG') && !smartGet('REBS') && !smartGet('REB') ? rgp : 1);
+      const rast = n(smartGet('AST','Ast','Assists','APG')) * (smartGet('APG') && !smartGet('AST') ? rgp : 1);
+      const rstl = n(smartGet('STL','Stl','Steals','SPG')) * (smartGet('SPG') && !smartGet('STL') ? rgp : 1);
+      const rblk = n(smartGet('BLK','Blk','Blocks','BPG')) * (smartGet('BPG') && !smartGet('BLK') ? rgp : 1);
+      const rfgm = n(smartGet('FGM','Fgm'));
+      const r3pm = n(smartGet('3PM','3Pm','3pm'));
+      const rto  = n(smartGet('TO','To','Turnovers','TOPG')) * (smartGet('TOPG') && !smartGet('TO') ? rgp : 1);
+      const rpm  = n(smartGet('+/-','+/−','PM','+/ -'));
+      const rw   = smartGet('W','Wins') || '0';
+      const rl   = smartGet('L','Losses') || '0';
+      const rfgpct  = smartGet('FG%','Fg%','fg%') || '-';
+      const r3pct   = smartGet('3P%','3p%','3P%') || '-';
+      const rwinpct = smartGet('WIN%','W%','Win%','win%') || '-';
 
       return `<tr>
         <td class="tlink" style="text-align:left" onclick="goPlayer('${esc(name)}')">${name}</td>
@@ -796,6 +831,31 @@ function showPage(page) {
   window.scrollTo(0,0);
 }
 
+// ── THEME TOGGLE ──
+function toggleTheme() {
+  const body = document.body;
+  const knob = document.getElementById('theme-knob');
+  const toggle = document.getElementById('theme-toggle');
+  const isLight = body.classList.toggle('light-mode');
+  knob.style.left = isLight ? '23px' : '3px';
+  knob.style.background = isLight ? 'var(--gold)' : 'var(--chalk-dim)';
+  toggle.style.background = isLight ? 'rgba(200,144,42,0.2)' : 'var(--border)';
+  localStorage.setItem('abg-theme', isLight ? 'light' : 'dark');
+}
+
+// Restore theme on load
+(function() {
+  if (localStorage.getItem('abg-theme') === 'light') {
+    document.body.classList.add('light-mode');
+    setTimeout(() => {
+      const knob = document.getElementById('theme-knob');
+      const toggle = document.getElementById('theme-toggle');
+      if (knob) { knob.style.left = '23px'; knob.style.background = 'var(--gold)'; }
+      if (toggle) toggle.style.background = 'rgba(200,144,42,0.2)';
+    }, 100);
+  }
+})();
+
 function setMsg(m) { document.querySelector('.load-txt').textContent = m; }
 
 async function loadAll() {
@@ -833,5 +893,37 @@ async function loadAll() {
 
 loadAll();
 </script>
+
+<footer id="site-footer" style="
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  padding:20px 20px;
+  text-align:center;
+  margin-top:40px;
+">
+  <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div style="font-size:12px;color:var(--chalk-dim)">
+      Site created by
+      <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600">That Filipino Life</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase">Light Mode</span>
+      <div id="theme-toggle" onclick="toggleTheme()" style="
+        width:44px;height:24px;border-radius:12px;
+        background:var(--border);cursor:pointer;
+        position:relative;transition:background 0.3s;
+        border:1px solid var(--chalk-dim);
+      ">
+        <div id="theme-knob" style="
+          position:absolute;top:3px;left:3px;
+          width:16px;height:16px;border-radius:50%;
+          background:var(--chalk-dim);
+          transition:all 0.3s;
+        "></div>
+      </div>
+    </div>
+  </div>
+</footer>
+
 </body>
 </html>
