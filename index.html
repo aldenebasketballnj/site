@@ -252,23 +252,23 @@ body.light-mode #home-hero { background:#FFFFFF !important; }
         <table id="lb-main-table">
           <thead>
             <tr id="lb-header">
-              <th class="sort-th" data-col="rank" style="text-align:left;width:28px;cursor:pointer">#</th>
-              <th class="sort-th" data-col="name" style="text-align:left;cursor:pointer">Player ↕</th>
-              <th class="sort-th" data-col="gp" style="cursor:pointer">GP ↕</th>
-              <th class="sort-th" data-col="w" style="cursor:pointer">W ↕</th>
-              <th class="sort-th" data-col="l" style="cursor:pointer">L ↕</th>
-              <th class="sort-th" data-col="winPct" style="cursor:pointer">WIN% ↕</th>
-              <th class="sort-th" data-col="ppg" style="cursor:pointer">PPG ↕</th>
-              <th class="sort-th" data-col="rpg" style="cursor:pointer">RPG ↕</th>
-              <th class="sort-th" data-col="apg" style="cursor:pointer">APG ↕</th>
-              <th class="sort-th" data-col="spg" style="cursor:pointer">SPG ↕</th>
-              <th class="sort-th" data-col="bpg" style="cursor:pointer">BPG ↕</th>
-              <th class="sort-th" data-col="fgm" style="cursor:pointer">FGM ↕</th>
-              <th class="sort-th" data-col="fgPct" style="cursor:pointer">FG% ↕</th>
-              <th class="sort-th" data-col="threePm" style="cursor:pointer">3PM ↕</th>
-              <th class="sort-th" data-col="threePct" style="cursor:pointer">3P% ↕</th>
-              <th class="sort-th" data-col="topg" style="cursor:pointer">TOPG ↕</th>
-              <th class="sort-th" data-col="pm" style="cursor:pointer">+/− ↕</th>
+              <th class="sort-th" data-col="rank" data-label="#" style="text-align:left;width:28px;cursor:pointer">#</th>
+              <th class="sort-th" data-col="name" data-label="Player" style="text-align:left;cursor:pointer">Player</th>
+              <th class="sort-th" data-col="gp" data-label="GP" style="cursor:pointer">GP</th>
+              <th class="sort-th" data-col="w" data-label="W" style="cursor:pointer">W</th>
+              <th class="sort-th" data-col="l" data-label="L" style="cursor:pointer">L</th>
+              <th class="sort-th" data-col="winPct" data-label="WIN%" style="cursor:pointer">WIN%</th>
+              <th class="sort-th" data-col="ppg" data-label="PPG" style="cursor:pointer">PPG</th>
+              <th class="sort-th" data-col="rpg" data-label="RPG" style="cursor:pointer">RPG</th>
+              <th class="sort-th" data-col="apg" data-label="APG" style="cursor:pointer">APG</th>
+              <th class="sort-th" data-col="spg" data-label="SPG" style="cursor:pointer">SPG</th>
+              <th class="sort-th" data-col="bpg" data-label="BPG" style="cursor:pointer">BPG</th>
+              <th class="sort-th" data-col="fgm" data-label="FGM" style="cursor:pointer">FGM</th>
+              <th class="sort-th" data-col="fgPct" data-label="FG%" style="cursor:pointer">FG%</th>
+              <th class="sort-th" data-col="threePm" data-label="3PM" style="cursor:pointer">3PM</th>
+              <th class="sort-th" data-col="threePct" data-label="3P%" style="cursor:pointer">3P%</th>
+              <th class="sort-th" data-col="topg" data-label="TOPG" style="cursor:pointer">TOPG</th>
+              <th class="sort-th" data-col="pm" data-label="+/−" style="cursor:pointer">+/−</th>
             </tr>
           </thead>
           <tbody id="lb-main-body"></tbody>
@@ -400,10 +400,11 @@ let players = [], tourneyData = {};
 // ── BUILD PLAYER FROM ROW ──
 function buildPlayer(row) {
   const keys = Object.keys(row);
-  const name = row[keys[0]] || '';
+  // Console shows first col is "PLAYER" 
+  const name = (row['PLAYER'] || row['Player'] || row[keys[0]] || '').trim();
   if (!name || name.length < 2) return null;
   const low = name.toLowerCase();
-  if (low==='player'||low==='name'||low.includes('total')||low==='') return null;
+  if (low==='player'||low==='name'||low.includes('total')||low===''||low.includes('group average')||low.includes('average')) return null;
 
   const gp  = n(get(row,'GP','G','Games','Games Played'));
   if (gp === 0) return null;
@@ -425,13 +426,13 @@ function buildPlayer(row) {
     fgPct:   get(row,'FG%') || '0%',
     threePm: n(get(row,'3PM')),
     threePA: n(get(row,'3PA')),
-    threePct:get(row,'3FG%','3P%') || '0%',
+    threePct:get(row,'3P%','3FG%') || '0%',
     reb:     n(get(row,'RPG')) * gp,
     ast:     n(get(row,'APG')) * gp,
     stl:     n(get(row,'SPG')) * gp,
     blk:     n(get(row,'BPG')) * gp,
     to:      n(get(row,'TOPG')) * gp,
-    pm_val:  n(get(row,'+/-','PM')),
+    pm_val:  n(get(row,'+/−','+/-','PM','+/–')),  // unicode minus in sheet
     w:       n(get(row,'W')),
     l:       n(get(row,'L')),
     winPct:  get(row,'WIN%','W%') || '0%',
@@ -635,14 +636,13 @@ function lbVal(p, col) {
 
 function updateSortHeaders() {
   document.querySelectorAll('.sort-th').forEach(h => {
-    // Store original label in data attribute on first run
-    if (!h.dataset.label) h.dataset.label = h.textContent.replace(' ↑','').replace(' ↓','').replace(' ↕','').trim();
-    const base = h.dataset.label;
+    // Always use data-label attribute (set in HTML) as the source of truth
+    const base = h.dataset.label || h.dataset.col || '';
     if (h.dataset.col === lbSortCol) {
-      h.innerHTML = base + ' <span style="color:var(--gold-light)">' + (lbSortAsc ? '↑' : '↓') + '</span>';
+      h.innerHTML = base + ' <span style="color:var(--gold-light);font-size:11px">' + (lbSortAsc ? '↑' : '↓') + '</span>';
       h.style.color = 'var(--gold-light)';
     } else {
-      h.innerHTML = base + ' <span style="opacity:0.3">↕</span>';
+      h.innerHTML = base + ' <span style="opacity:0.25;font-size:11px">↕</span>';
       h.style.color = '';
     }
   });
@@ -754,15 +754,22 @@ function openTourney(key) {
 
   rows.forEach(r => {
     const allKeys = Object.keys(r);
-    const name = String(r[allKeys[0]] || '').trim();
+    // Col 0 = tournament title col = player/team name
+    // Col 1 = GP, Col 2 = PPG, Col 3 = RPG, Col 4 = APG, Col 5 = SPG
+    // Col 6 = BPG, Col 7 = TOPG, Col 8 = +/-, Col 9 = FGM, Col 10 = FGA
+    // Col 11 = FG%, Col 12 = 3PM, Col 13 = 3PA, Col 14 = 3FG%
+    // (Based on screenshot of Henry Cup VII sheet)
+    const pos = (i) => String(r[allKeys[i]] || '').trim();
+    const name = pos(0);
     if (!name) return;
 
+    // Try named columns first, fall back to positional
+    const getVal = (named, posIdx) => sg(r, named) || pos(posIdx);
+
     if (isTeamHeader(name)) {
-      if (name.toUpperCase() === 'TOTALS') return; // skip totals rows
-      // New team — set style for ALL subsequent players
+      if (name.toUpperCase() === 'TOTALS') return;
       const upper = name.toUpperCase().trim();
       currentStyle = TEAM_STYLES[upper] || FALLBACK[fallbackIdx++ % FALLBACK.length];
-      // Team header row — full width, styled
       avgBody += `<tr>
         <td colspan="15" style="
           background:${currentStyle.bg};
@@ -776,22 +783,21 @@ function openTourney(key) {
       </tr>`;
     } else {
       playerCount++;
-      // Player row — same background as current team
-      const rgp    = n(sg(r,'GP','G')) || 1;
-      const rppg   = parseFloat(sg(r,'PPG') || 0);
-      const rrpg   = parseFloat(sg(r,'RPG') || 0);
-      const rapg   = parseFloat(sg(r,'APG') || 0);
-      const rspg   = parseFloat(sg(r,'SPG') || 0);
-      const rbpg   = parseFloat(sg(r,'BPG') || 0);
-      const rtopg  = parseFloat(sg(r,'TOPG') || 0);
-      const rpm    = n(sg(r,'+/-','PM'));
-      const rfgm   = sg(r,'FGM') || '0';
-      const rfgpct = sg(r,'FG%') || '-';
-      const r3pm   = sg(r,'3PM') || '0';
-      const r3pct  = sg(r,'3FG%','3P%') || '-';
-      const rw     = sg(r,'W') || '0';
-      const rl     = sg(r,'L') || '0';
-      const rwpct  = sg(r,'WIN%','W%') || '-';
+      const rgp    = parseFloat(getVal('GP',1)) || 1;
+      const rppg   = parseFloat(getVal('PPG',2)) || 0;
+      const rrpg   = parseFloat(getVal('RPG',3)) || 0;
+      const rapg   = parseFloat(getVal('APG',4)) || 0;
+      const rspg   = parseFloat(getVal('SPG',5)) || 0;
+      const rbpg   = parseFloat(getVal('BPG',6)) || 0;
+      const rtopg  = parseFloat(getVal('TOPG',7)) || 0;
+      const rpm    = n(getVal('+/−',8) || getVal('+/-',8));
+      const rfgm   = getVal('FGM',9) || '0';
+      const rfgpct = getVal('FG%',11) || '-';
+      const r3pm   = getVal('3PM',12) || '0';
+      const r3pct  = getVal('3FG%',14) || getVal('3P%',14) || '-';
+      const rw     = getVal('W', 15) || '0';
+      const rl     = getVal('L', 16) || '0';
+      const rwpct  = getVal('WIN%', 17) || '-';
 
       avgBody += `<tr style="background:${currentStyle.bg}">
         <td class="tlink" style="text-align:left;padding-left:28px" onclick="goPlayer('${esc(name)}')">${name}</td>
@@ -826,6 +832,120 @@ function openTourney(key) {
   // ── BUILD PER-GAME SECTION FROM GAME LOG ──
   function buildGameSection(gameRows) {
     if (!gameRows || !gameRows.length) return '<div style="padding:16px;color:var(--chalk-dim)">Game log not available.</div>';
+
+    console.log('GAME COLS:', JSON.stringify(Object.keys(gameRows[0])));
+    if (gameRows.length > 0) console.log('GAME ROW0:', JSON.stringify(gameRows[0]));
+    if (gameRows.length > 1) console.log('GAME ROW1:', JSON.stringify(gameRows[1]));
+    if (gameRows.length > 2) console.log('GAME ROW2:', JSON.stringify(gameRows[2]));
+
+    // Games are laid out HORIZONTALLY - each game is a group of columns
+    // Col structure: [GameTitle, FGM, FGA, FG%, PTS, 3PM, 3PA, 3P%, REBS, AST, STL, BLK, TO, +/-] [blank] [GameTitle2, ...]
+    // Player names are in the GameTitle column rows
+    
+    const allCols = Object.keys(gameRows[0]);
+    
+    // Find which columns are game headers (contain "GAME" keyword)
+    const gameColIndices = [];
+    allCols.forEach((col, i) => {
+      if (col.toUpperCase().includes('GAME')) {
+        gameColIndices.push({ col, idx: i });
+      }
+    });
+
+    if (!gameColIndices.length) {
+      return '<div style="padding:16px;color:var(--chalk-dim)">Could not find game columns. Console: ' + JSON.stringify(allCols.slice(0,5)) + '</div>';
+    }
+
+    // For each game column group, extract the data
+    const gameGroups = gameColIndices.map(({ col, idx }) => {
+      // The stats for this game are in subsequent columns
+      // Col idx+0 = player/team name
+      // Col idx+1 = FGM, idx+2 = FGA, idx+3 = FG%, idx+4 = PTS
+      // Col idx+5 = 3PM, idx+6 = 3PA, idx+7 = 3P%
+      // Col idx+8 = REBS, idx+9 = AST, idx+10 = STL, idx+11 = BLK, idx+12 = TO
+      // Col idx+13 = +/-
+      const statCols = allCols.slice(idx, idx + 14);
+
+      const teams = [];
+      let curTeam = null;
+      let curStyle = FALLBACK[0];
+      let fbI = 0;
+
+      gameRows.forEach(row => {
+        const cellVal = String(row[col] || '').trim();
+        if (!cellVal) return;
+
+        const upper = cellVal.toUpperCase();
+        
+        // Skip the game title row itself
+        if (upper.includes('GAME')) return;
+        
+        // Team header
+        if (upper.startsWith('TEAM ') || upper === 'GLADIATORS' || upper === 'NUTCRACKERS') {
+          curStyle = TEAM_STYLES[upper] || FALLBACK[fbI++ % FALLBACK.length];
+          curTeam = { name: cellVal, style: curStyle, players: [] };
+          teams.push(curTeam);
+          return;
+        }
+
+        // Skip totals
+        if (upper === 'TOTALS' || upper === 'TOTAL') return;
+
+        if (!curTeam) {
+          curTeam = { name: 'Players', style: FALLBACK[0], players: [] };
+          teams.push(curTeam);
+        }
+
+        // Extract stats positionally
+        const p = (offset) => {
+          const c = allCols[idx + offset];
+          return c ? String(row[c] || '').trim() : '';
+        };
+        const clean = v => (!v || v === '#DIV/0!' || v === '') ? '-' : v;
+        const ppm = n(p(13));
+
+        curTeam.players.push({
+          name: cellVal,
+          fgm:  clean(p(1)), fga: clean(p(2)), fgpct: clean(p(3)),
+          pts:  clean(p(4)),
+          tpm:  clean(p(5)), tpa: clean(p(6)), tpct: clean(p(7)),
+          reb:  clean(p(8)), ast: clean(p(9)), stl: clean(p(10)),
+          blk:  clean(p(11)), to: clean(p(12)), pm: ppm,
+        });
+      });
+
+      return { title: col, teams };
+    });
+
+    return gameGroups.map(game => {
+      const teamsHtml = game.teams.map(team => {
+        const ts = team.style;
+        const hdr = `<tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 16px">${team.name}</td></tr>`;
+        const rows = team.players.map(p => `<tr style="background:${ts.bg}">
+          <td style="text-align:left;padding-left:24px" class="tlink" onclick="goPlayer('${esc(p.name)}')">${p.name}</td>
+          <td>${p.fgm}/${p.fga}</td><td>${p.fgpct}</td>
+          <td class="tg">${p.pts}</td>
+          <td>${p.tpm}/${p.tpa}</td><td>${p.tpct}</td>
+          <td>${p.reb}</td><td>${p.ast}</td><td>${p.stl}</td><td>${p.blk}</td><td>${p.to}</td>
+          <td class="${pmc(p.pm)}">${pm(p.pm)}</td>
+        </tr>`).join('');
+        return hdr + rows;
+      }).join('');
+
+      return `<div class="tbl-wrap" style="margin-bottom:10px">
+        <div class="tbl-hd" style="background:var(--panel2)">${game.title}</div>
+        <div class="tbl-scroll"><table>
+          <thead><tr>
+            <th style="text-align:left">Player</th>
+            <th>FGM/A</th><th>FG%</th><th>PTS</th>
+            <th>3PM/A</th><th>3P%</th>
+            <th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/−</th>
+          </tr></thead>
+          <tbody>${teamsHtml}</tbody>
+        </table></div>
+      </div>`;
+    }).join('');
+  }
 
     // Log game row structure
     console.log('GAME COLS:', JSON.stringify(Object.keys(gameRows[0])));
