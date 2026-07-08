@@ -294,14 +294,16 @@ const SHEET_ID = "1lh5lyY2hhbqYtyjApaVialR4POoN_dHedYrzVws7D24";
 const PUB_BASE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRb8iGaCarUyV4KcE2gSlRhnPc8drrIEAdrvHl-QRtYjW1UqK2lLUqPC4-6E-Cb0Ra9mYanzNBOOtXd/pub";
 const AVG_GID  = '2125627346';
 const TABS = {
-  VJC_I:   { statsGid:'237216492',  label:'VJC I',         date:'Dec 22, 2024' },
-  VJC_II:  { statsGid:'495810244',  label:'VJC II',        date:'Mar 16, 2025' },
-  VJC_III: { statsGid:'1145727451', label:'VJC III',       date:'Aug 30, 2025' },
-  VJC_IV:  { statsGid:'1187211300', label:'VJC IV',        date:'Dec 7, 2025'  },
-  CUP_V:   { statsGid:'1590809554', label:'ABG Cup V',     date:'Mar 15, 2026' },
-  CUP_VI:  { statsGid:'459425634',  label:'ABG Cup VI',    date:'Mar 29, 2026' },
-  CUP_VII: { statsGid:'1505272595', label:'Henry Cup VII', date:'Jul 6, 2026'  },
+  VJC_I:   { statsGid:'237216492',  gameGid:'1626881344', label:'VJC I',         date:'Dec 22, 2024' },
+  VJC_II:  { statsGid:'495810244',  gameGid:'1683821278', label:'VJC II',        date:'Mar 16, 2025' },
+  VJC_III: { statsGid:'1145727451', gameGid:'626260981',  label:'VJC III',       date:'Aug 30, 2025' },
+  VJC_IV:  { statsGid:'1187211300', gameGid:'1691876626', label:'VJC IV',        date:'Dec 7, 2025'  },
+  CUP_V:   { statsGid:'1590809554', gameGid:'1012330925', label:'ABG Cup V',     date:'Mar 15, 2026' },
+  CUP_VI:  { statsGid:'459425634',  gameGid:'113280525',  label:'ABG Cup VI',    date:'Mar 29, 2026' },
+  CUP_VII: { statsGid:'1505272595', gameGid:'1185814091', label:'Henry Cup VII', date:'Jul 6, 2026'  },
 };
+// Cache for game log data per tournament
+const gameLogCache = {};
 
 // ── FETCH directly from published Google Sheet URL ──
 async function fetchSheet(gid) {
@@ -382,6 +384,7 @@ function n(v) { if (!v||v==='#DIV/0!'||v==='-'||v==='N/A'||v==='') return 0; ret
 function pm(v) { const f=n(v); return (f>0?'+':'')+f; }
 function pmc(v) { const f=n(v); return f>0?'tp':f<0?'tn':''; }
 function perG(total, gp) { return gp>0?(total/gp).toFixed(1):'0.0'; }
+function fmtStat(val) { return val !== undefined && val !== null ? (Math.round(val*10)/10).toFixed(1) : '0.0'; }
 function esc(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 function get(row, ...keys) {
@@ -416,23 +419,29 @@ function buildPlayer(row) {
   return {
     name,
     gp,
-    pts:     hasPPG && !hasPTS ? n(get(row,'PPG'))*gpVal : n(get(row,'PTS','Points','Pts','PPG')),
-    fgm:     n(get(row,'FGM','Fgm')),
-    fga:     n(get(row,'FGA','Fga')),
-    fgPct:   get(row,'FG%','FG%','Fg%','fg%') || '0%',
-    threePm: n(get(row,'3PM','3Pm','3pm')),
-    threePA: n(get(row,'3PA','3Pa','3pa')),
-    threePct:get(row,'3P%','3p%','3P%') || '0%',
-    reb:     n(get(row,'REBS','REB','Reb','Rebounds','rebs','RPG')) * (row['RPG'] && !row['REBS'] && !row['REB'] ? gpVal : 1),
-    ast:     n(get(row,'AST','Ast','Assists','ast','APG')) * (row['APG'] && !row['AST'] ? gpVal : 1),
-    stl:     n(get(row,'STL','Stl','Steals','stl','SPG')) * (row['SPG'] && !row['STL'] ? gpVal : 1),
-    blk:     n(get(row,'BLK','Blk','Blocks','blk','BPG')) * (row['BPG'] && !row['BLK'] ? gpVal : 1),
-    to:      n(get(row,'TO','To','Turnovers','to')),
-    pm_val:  n(get(row,'+/-','+/−','PM','+/ -','+/ −')),
-    w:       n(get(row,'W','Wins','w')),
-    l:       n(get(row,'L','Losses','l')),
-    winPct:  get(row,'WIN%','W%','Win%','win%') || '0%',
-    potg:    n(get(row,'PotG','POTG','potg')),
+    pts:     n(get(row,'PPG')) * gp,
+    fgm:     n(get(row,'FGM')),
+    fga:     n(get(row,'FGA')),
+    fgPct:   get(row,'FG%') || '0%',
+    threePm: n(get(row,'3PM')),
+    threePA: n(get(row,'3PA')),
+    threePct:get(row,'3FG%','3P%') || '0%',
+    reb:     n(get(row,'RPG')) * gp,
+    ast:     n(get(row,'APG')) * gp,
+    stl:     n(get(row,'SPG')) * gp,
+    blk:     n(get(row,'BPG')) * gp,
+    to:      n(get(row,'TOPG')) * gp,
+    pm_val:  n(get(row,'+/-','PM')),
+    w:       n(get(row,'W')),
+    l:       n(get(row,'L')),
+    winPct:  get(row,'WIN%','W%') || '0%',
+    potg:    n(get(row,'PotG','POTG')),
+    ppg:     n(get(row,'PPG')),
+    rpg:     n(get(row,'RPG')),
+    apg:     n(get(row,'APG')),
+    spg:     n(get(row,'SPG')),
+    bpg:     n(get(row,'BPG')),
+    topg:    n(get(row,'TOPG')),
   };
 }
 
@@ -589,22 +598,13 @@ function renderLeaderboard() {
   if (!players.length) return;
   renderLbTable();
   // Add click handlers to headers
+  updateSortHeaders();
   document.querySelectorAll('.sort-th').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
       if (lbSortCol === col) { lbSortAsc = !lbSortAsc; }
       else { lbSortCol = col; lbSortAsc = false; }
-      // Update header arrows
-      document.querySelectorAll('.sort-th').forEach(h => {
-        const base = h.textContent.replace(' ↑','').replace(' ↓','').replace(' ↕','');
-        if (h.dataset.col === lbSortCol) {
-          h.textContent = base + (lbSortAsc ? ' ↑' : ' ↓');
-          h.style.color = 'var(--gold-light)';
-        } else {
-          h.textContent = base + ' ↕';
-          h.style.color = '';
-        }
-      });
+      updateSortHeaders();
       renderLbTable();
     });
   });
@@ -631,6 +631,21 @@ function lbVal(p, col) {
     case 'pm':      return p.pm_val;
     default:        return p.pm_val;
   }
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('.sort-th').forEach(h => {
+    // Store original label in data attribute on first run
+    if (!h.dataset.label) h.dataset.label = h.textContent.replace(' ↑','').replace(' ↓','').replace(' ↕','').trim();
+    const base = h.dataset.label;
+    if (h.dataset.col === lbSortCol) {
+      h.innerHTML = base + ' <span style="color:var(--gold-light)">' + (lbSortAsc ? '↑' : '↓') + '</span>';
+      h.style.color = 'var(--gold-light)';
+    } else {
+      h.innerHTML = base + ' <span style="opacity:0.3">↕</span>';
+      h.style.color = '';
+    }
+  });
 }
 
 function renderLbTable() {
@@ -685,134 +700,255 @@ function renderTournaments() {
 }
 
 function openTourney(key) {
+  window._tlogDone = false;
   const t = TABS[key];
   const raw = tourneyData[key] || [];
 
-  // Filter out header/total rows
+  // Team color map
+  const teamStyles = {
+    'TEAM BLACK': { bg:'rgba(255,255,255,0.04)', border:'rgba(255,255,255,0.15)', label:'#E0DCd4' },
+    'TEAM BLUE':  { bg:'rgba(42,100,200,0.08)',  border:'rgba(42,100,200,0.3)',   label:'#6EA8FF' },
+    'TEAM WHITE': { bg:'rgba(200,200,200,0.06)', border:'rgba(200,200,200,0.2)',  label:'#C8C4BC' },
+    'GLADIATORS': { bg:'rgba(200,144,42,0.08)',  border:'rgba(200,144,42,0.3)',   label:'var(--gold-light)' },
+    'NUTCRACKERS':{ bg:'rgba(42,157,92,0.08)',   border:'rgba(42,157,92,0.3)',    label:'#4ec98a' },
+    'TEAM VIJAY': { bg:'rgba(150,42,200,0.08)',  border:'rgba(150,42,200,0.3)',   label:'#c080ff' },
+  };
+  const fallbackColors = [
+    { bg:'rgba(200,144,42,0.06)', border:'rgba(200,144,42,0.2)', label:'var(--gold-light)' },
+    { bg:'rgba(42,100,200,0.06)', border:'rgba(42,100,200,0.2)', label:'#6EA8FF' },
+    { bg:'rgba(42,157,92,0.06)', border:'rgba(42,157,92,0.2)',   label:'#4ec98a' },
+    { bg:'rgba(192,57,43,0.06)', border:'rgba(192,57,43,0.2)',   label:'#e07060' },
+  ];
+  let fallbackIdx = 0;
+
+  // Smart column getter
+  function sg(row, ...keys) {
+    const allKeys = Object.keys(row);
+    for (const k of keys) {
+      if (row[k] !== undefined && row[k] !== '') return row[k];
+      const found = allKeys.find(ak => ak.toLowerCase() === k.toLowerCase());
+      if (found && row[found] !== '') return row[found];
+    }
+    return '';
+  }
+
+  // Detect team header rows vs player rows
+  function isTeamRow(r) {
+    const allKeys = Object.keys(r);
+    const name = r[allKeys[0]] || '';
+    const upper = name.toUpperCase();
+    // Team row: name contains TEAM, or known team names, or has no GP value
+    return upper.startsWith('TEAM ') || upper === 'GLADIATORS' || 
+           upper === 'NUTCRACKERS' || upper.startsWith('TEAM VIJAY') ||
+           (!sg(r,'GP','G') && !sg(r,'+/-','PM')) ||
+           upper === 'TOTALS';
+  }
+
+  // Filter out completely empty rows and "Totals" rows
   const rows = raw.filter(r => {
-    const name = r[Object.keys(r)[0]] || '';
-    const low = name.toLowerCase();
-    return name.length > 1
-      && !low.includes('total')
-      && !low.includes('player')
-      && !low.includes('name');
-  }).sort((a,b) => n(get(b,'+/-','+/−','PM')) - n(get(a,'+/-','+/−','PM')));
+    const name = (r[Object.keys(r)[0]] || '').trim();
+    return name.length > 0 && name.toLowerCase() !== 'totals';
+  });
 
-  let body = '';
-  if (!rows.length) {
-    body = '<div style="padding:20px;color:var(--chalk-dim);font-size:13px">Stats not available yet for this tournament.</div>';
-  } else {
-    // Detect all available columns from first row
-    const sampleKeys = Object.keys(rows[0]);
-    console.log('Tournament columns:', sampleKeys);
+  if (rows.length > 0) {
+    console.log('STATS COLS:', JSON.stringify(Object.keys(rows[0])));
+    console.log('SAMPLE:', JSON.stringify(rows[0]));
+  }
 
-    // Log all keys from first row for debugging
-    if (rows.length > 0) console.log('TOURNEY ROW KEYS:', JSON.stringify(Object.keys(rows[0])), 'SAMPLE:', JSON.stringify(rows[0]));
+  // Build averages table grouped by team
+  let avgBody = '';
+  let currentTeamStyle = fallbackColors[0];
+  let playerCount = 0;
 
-    const tableRows = rows.map(r => {
-      const allKeys = Object.keys(r);
-      const nameKey = allKeys[0];
-      const name = r[nameKey] || '';
+  rows.forEach(r => {
+    const allKeys = Object.keys(r);
+    const name = (r[allKeys[0]] || '').trim();
+    if (!name) return;
 
-      // Smart getter that does case-insensitive + partial match
-      const smartGet = (...variants) => {
-        for (const v of variants) {
-          // exact match first
-          if (r[v] !== undefined && r[v] !== '') return r[v];
-          // case-insensitive match
-          const found = allKeys.find(k => k.toLowerCase() === v.toLowerCase());
-          if (found && r[found] !== '') return r[found];
-        }
-        return '';
-      };
+    if (isTeamRow(r)) {
+      // Team header row
+      const upper = name.toUpperCase();
+      currentTeamStyle = teamStyles[upper] || fallbackColors[fallbackIdx++ % fallbackColors.length];
+      avgBody += `<tr style="background:${currentTeamStyle.bg};border-top:2px solid ${currentTeamStyle.border}">
+        <td colspan="15" style="
+          font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;
+          text-transform:uppercase;letter-spacing:0.12em;
+          color:${currentTeamStyle.label};padding:12px 14px;
+        ">${name}</td>
+      </tr>`;
+    } else {
+      playerCount++;
+      const rgp    = n(sg(r,'GP','G')) || 1;
+      const rppg   = n(sg(r,'PPG'));
+      const rrpg   = n(sg(r,'RPG'));
+      const rapg   = n(sg(r,'APG'));
+      const rspg   = n(sg(r,'SPG'));
+      const rbpg   = n(sg(r,'BPG'));
+      const rtopg  = n(sg(r,'TOPG'));
+      const rpm    = n(sg(r,'+/-','PM'));
+      const rfgm   = n(sg(r,'FGM'));
+      const rfga   = n(sg(r,'FGA'));
+      const rfgpct = sg(r,'FG%') || '-';
+      const r3pm   = n(sg(r,'3PM'));
+      const r3pa   = n(sg(r,'3PA'));
+      const r3pct  = sg(r,'3FG%','3P%') || '-';
+      const rw     = sg(r,'W') || '0';
+      const rl     = sg(r,'L') || '0';
+      const rwinpct= sg(r,'WIN%','W%') || '-';
 
-      const rgp  = n(smartGet('GP','G','Games')) || 1;
-      const rpts = n(smartGet('PTS','Points','Pts','PPG')) * (smartGet('PPG') && !smartGet('PTS') ? rgp : 1);
-      const rreb = n(smartGet('REBS','REB','Reb','Rebounds','RPG')) * (smartGet('RPG') && !smartGet('REBS') && !smartGet('REB') ? rgp : 1);
-      const rast = n(smartGet('AST','Ast','Assists','APG')) * (smartGet('APG') && !smartGet('AST') ? rgp : 1);
-      const rstl = n(smartGet('STL','Stl','Steals','SPG')) * (smartGet('SPG') && !smartGet('STL') ? rgp : 1);
-      const rblk = n(smartGet('BLK','Blk','Blocks','BPG')) * (smartGet('BPG') && !smartGet('BLK') ? rgp : 1);
-      const rfgm = n(smartGet('FGM','Fgm'));
-      const r3pm = n(smartGet('3PM','3Pm','3pm'));
-      const rto  = n(smartGet('TO','To','Turnovers','TOPG')) * (smartGet('TOPG') && !smartGet('TO') ? rgp : 1);
-      const rpm  = n(smartGet('+/-','+/−','PM','+/ -'));
-      const rw   = smartGet('W','Wins') || '0';
-      const rl   = smartGet('L','Losses') || '0';
-      const rfgpct  = smartGet('FG%','Fg%','fg%') || '-';
-      const r3pct   = smartGet('3P%','3p%','3P%') || '-';
-      const rwinpct = smartGet('WIN%','W%','Win%','win%') || '-';
-
-      return `<tr>
-        <td class="tlink" style="text-align:left" onclick="goPlayer('${esc(name)}')">${name}</td>
+      avgBody += `<tr style="background:${currentTeamStyle.bg}">
+        <td class="tlink" style="text-align:left;padding-left:24px" onclick="goPlayer('${esc(name)}')">${name}</td>
         <td>${rgp}</td>
-        <td class="tg">${perG(rpts,rgp)}</td>
-        <td>${perG(rreb,rgp)}</td>
-        <td>${perG(rast,rgp)}</td>
-        <td>${perG(rstl,rgp)}</td>
-        <td>${perG(rblk,rgp)}</td>
+        <td class="tg">${rppg.toFixed(1)}</td>
+        <td>${rrpg.toFixed(1)}</td>
+        <td>${rapg.toFixed(1)}</td>
+        <td>${rspg.toFixed(1)}</td>
+        <td>${rbpg.toFixed(1)}</td>
         <td>${rfgm}</td>
         <td>${rfgpct}</td>
         <td>${r3pm}</td>
         <td>${r3pct}</td>
-        <td>${perG(rto,rgp)}</td>
+        <td>${rtopg.toFixed(1)}</td>
         <td class="${pmc(rpm)}">${pm(rpm)}</td>
         <td>${rw}-${rl}</td>
         <td>${rwinpct}</td>
       </tr>`;
+    }
+  });
+
+  const avgTable = `<div class="tbl-scroll"><table>
+    <thead><tr>
+      <th style="text-align:left">Player</th>
+      <th>GP</th><th>PPG</th><th>RPG</th><th>APG</th><th>SPG</th><th>BPG</th>
+      <th>FGM</th><th>FG%</th><th>3PM</th><th>3FG%</th><th>TOPG</th>
+      <th>+/−</th><th>W-L</th><th>WIN%</th>
+    </tr></thead>
+    <tbody>${avgBody || '<tr><td colspan="15" style="padding:16px;color:var(--chalk-dim)">No stats available</td></tr>'}</tbody>
+  </table></div>`;
+
+  // Build per-game section (load from game tab)
+  const buildGameSection = (gameRows) => {
+    if (!gameRows || !gameRows.length) return '<div style="padding:16px;color:var(--chalk-dim);font-size:13px">Game log not available.</div>';
+
+    // Find game headers (rows where col A contains "GAME")
+    const games = [];
+    let currentGame = null;
+
+    gameRows.forEach(r => {
+      const allKeys = Object.keys(r);
+      const first = (r[allKeys[0]] || '').trim();
+      const second = (r[allKeys[1]] || '').trim();
+
+      // Game header: first cell contains "GAME" or second cell contains "GAME"
+      if (first.toUpperCase().includes('GAME') || second.toUpperCase().includes('GAME')) {
+        currentGame = { title: first || second, teams: [] };
+        games.push(currentGame);
+        return;
+      }
+
+      if (!currentGame) return;
+
+      // Team header within game
+      const upper = first.toUpperCase();
+      if (upper.startsWith('TEAM ') || upper === 'GLADIATORS' || upper === 'NUTCRACKERS' || upper === 'TOTALS') {
+        if (upper !== 'TOTALS') currentGame.teams.push({ name: first, players: [] });
+        return;
+      }
+
+      if (!first || first.length < 2) return;
+
+      const lastTeam = currentGame.teams[currentGame.teams.length - 1];
+      if (lastTeam) lastTeam.players.push(r);
+    });
+
+    if (!games.length) return '<div style="padding:16px;color:var(--chalk-dim)">Could not parse game log.</div>';
+
+    return games.map(game => {
+      const teamsHtml = game.teams.map(team => {
+        const upper = team.name.toUpperCase();
+        const ts = teamStyles[upper] || fallbackColors[0];
+        const playerRows = team.players.map(r => {
+          const allKeys = Object.keys(r);
+          const pname = (r[allKeys[0]] || '').trim();
+          if (!pname || pname.toLowerCase() === 'totals') return '';
+          const pfgm  = sg(r,'FGM') || '0';
+          const pfga  = sg(r,'FGA') || '0';
+          const pfgpct= sg(r,'FG%') || '-';
+          const ppts  = sg(r,'PTS') || '0';
+          const p3pm  = sg(r,'3PM') || '0';
+          const p3pa  = sg(r,'3PA') || '0';
+          const p3pct = sg(r,'3P%') || '-';
+          const preb  = sg(r,'REBS','REB') || '0';
+          const past  = sg(r,'AST') || '0';
+          const pstl  = sg(r,'STL') || '0';
+          const pblk  = sg(r,'BLK') || '0';
+          const pto   = sg(r,'TO') || '0';
+          const ppm   = n(sg(r,'+/-','PM'));
+          return `<tr style="background:${ts.bg}">
+            <td style="text-align:left;padding-left:20px" class="tlink" onclick="goPlayer('${esc(pname)}')">${pname}</td>
+            <td>${pfgm}/${pfga}</td><td>${pfgpct}</td>
+            <td class="tg">${ppts}</td>
+            <td>${p3pm}/${p3pa}</td><td>${p3pct}</td>
+            <td>${preb}</td><td>${past}</td><td>${pstl}</td><td>${pblk}</td><td>${pto}</td>
+            <td class="${pmc(ppm)}">${pm(ppm)}</td>
+          </tr>`;
+        }).filter(Boolean).join('');
+
+        return `<tr style="background:${ts.bg};border-top:2px solid ${ts.border}">
+          <td colspan="12" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px">${team.name}</td>
+        </tr>${playerRows}`;
+      }).join('');
+
+      return `<div style="margin-bottom:4px">
+        <div class="tbl-hd" style="background:var(--panel2);font-size:11px">${game.title}</div>
+        <div class="tbl-scroll"><table>
+          <thead><tr>
+            <th style="text-align:left">Player</th>
+            <th>FGM/A</th><th>FG%</th><th>PTS</th>
+            <th>3PM/A</th><th>3P%</th>
+            <th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/−</th>
+          </tr></thead>
+          <tbody>${teamsHtml}</tbody>
+        </table></div>
+      </div>`;
     }).join('');
+  };
 
-    body = `<div class="tbl-scroll"><table>
-      <thead><tr>
-        <th style="text-align:left">Player</th>
-        <th>GP</th>
-        <th>PPG</th>
-        <th>RPG</th>
-        <th>APG</th>
-        <th>SPG</th>
-        <th>BPG</th>
-        <th>FGM</th>
-        <th>FG%</th>
-        <th>3PM</th>
-        <th>3P%</th>
-        <th>TOPG</th>
-        <th>+/−</th>
-        <th>W-L</th>
-        <th>WIN%</th>
-      </tr></thead>
-      <tbody>${tableRows}</tbody>
-    </table></div>`;
-  }
-
+  // Render page with averages, then load game log
   document.getElementById('tourney-content').innerHTML = `
-    <div style="
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:13px; padding:22px; margin-bottom:14px;
-      position:relative; overflow:hidden;
-    ">
-      <div style="
-        position:absolute; top:-10px; right:-10px;
-        font-family:'Barlow Condensed',sans-serif;
-        font-size:120px; font-weight:900;
-        color:rgba(200,144,42,0.05); line-height:1;
-        pointer-events:none;
-      ">${rows.length}</div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-10px;right:-10px;font-family:'Barlow Condensed',sans-serif;font-size:120px;font-weight:900;color:rgba(200,144,42,0.05);line-height:1;pointer-events:none">${playerCount}</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(24px,5vw,44px);font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px">${t.label}</div>
-      <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:16px">${t.date} · ${rows.length} Players</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <div style="background:rgba(200,144,42,0.08);border:1px solid rgba(200,144,42,0.2);border-radius:8px;padding:10px 16px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--gold-light)">${rows.length}</div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--chalk-dim)">Players</div>
-        </div>
-        <div style="background:rgba(200,144,42,0.08);border:1px solid rgba(200,144,42,0.2);border-radius:8px;padding:10px 16px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--gold-light)">${rows.length > 0 ? rows.reduce((max,r)=>Math.max(max,n(get(r,'GP','G'))),0) : '-'}</div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--chalk-dim)">Max GP</div>
-        </div>
+      <div style="font-size:12px;color:var(--chalk-dim);margin-bottom:16px">${t.date} · ${playerCount} Players</div>
+    </div>
+
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <div class="tbl-hd">Tournament Averages — Grouped by Team</div>
+      ${avgTable}
+    </div>
+
+    <div class="sl">Per Game Stats</div>
+    <div id="game-log-section">
+      <div style="padding:20px;text-align:center;color:var(--chalk-dim)">
+        <div class="spin" style="margin:0 auto 10px"></div>
+        Loading game log...
       </div>
     </div>
-    <div class="tbl-wrap">
-      <div class="tbl-hd">Player Stats — Sorted by +/−</div>
-      ${body}
-    </div>`;
+  `;
+
+  // Load game log async
+  (async () => {
+    try {
+      let gameRows = gameLogCache[key];
+      if (!gameRows) {
+        gameRows = await fetchSheet(t.gameGid);
+        gameLogCache[key] = gameRows;
+      }
+      document.getElementById('game-log-section').innerHTML = buildGameSection(gameRows);
+    } catch(e) {
+      document.getElementById('game-log-section').innerHTML = `<div style="padding:16px;color:var(--chalk-dim);font-size:13px">Could not load game log: ${e.message}</div>`;
+    }
+  })();
 
   document.getElementById('tournaments-list').style.display='none';
   document.getElementById('tournament-detail').style.display='block';
