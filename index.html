@@ -328,7 +328,7 @@ body.light-mode nav{background:#F5F3EE;}
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:sticky;bottom:0;z-index:100;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.2</span>
+      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.3</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
@@ -892,135 +892,141 @@ function buildAvgSection(rows, t) {
 function buildGamesSection(rows, t) {
   if(!rows.length){ document.getElementById('t-games-section').innerHTML=''; return; }
 
-  // Layout confirmed from screenshots:
-  // Title row:  cells[0]="GAME 1- 7/5/2026" (no title for game 1&2, just header row)
-  //             OR cells[0]="GAME 3- 7/5/2026", cells[14]="GAME 4- 7/5/2026"
-  // Header row: cells[0]="TEAM BLUE", cells[1]="FGM"... cells[14]="TEAM WHITE/BLACK"
-  // Player rows follow
-  // BLANK row separates games
-  //
-  // From screenshots game 1 has no title row - first row IS the header
-  // Game 1: TEAM BLUE vs TEAM WHITE (no title row, starts with header)
-  // Game 2: TEAM BLACK vs TEAM WHITE (starts with header row)
-  // Game 3: has "GAME 3- 7/5/2026" title, then TEAM BLACK vs TEAM BLUE
-  // etc.
+  // From screenshots and console data:
+  // The game log tab has games stacked vertically
+  // Each game block structure:
+  //   [optional] Title row: cells[0]="GAME X- date" (Games 3+ have this)
+  //   Header row: cells[0]="TEAM A", cells[1]="FGM", ..., cells[14]="TEAM B"
+  //   Player rows for both teams side by side (14 cols each)
+  //   TOTALS row: cells[0]="TOTALS"
+  //   [Team B header sometimes embedded - but from screenshots Team B starts after TOTALS]
+  //   Player rows for Team B
+  //   TOTALS row for Team B
+  //   Blank row separating games
 
-  const TEAM_B_COL=14; // second team name always at col 14
+  // Actually from screenshots MORE carefully:
+  // Game 1: Row0=header (TEAM BLUE | FGM..FGA..FG%..PTS..3PM..3PA..3P%..REBS..AST..STL..BLK..TO | "" | TEAM WHITE | FGM...)
+  //         Then player rows, TOTALS row, all in same section
+  //         Team White section starts right after Team Blue TOTALS
 
-  // Split into blocks: a new block starts when we see either:
-  // 1. A title row (cells[0] starts with GAME)
-  // 2. A header row (cells[1].toUpperCase()==='FGM' AND previous block ended)
-  const blocks=[];
-  let cur=null;
-  let prevWasBlank=true;
+  // From console Row0: ["TEAM BLUE","FGM","FGA","FG%","PTS","3PM","3PA","3P%","REBS","AST","STL","BLK","TO","","TEAM WHITE","FGM","FGA","FG%","PTS"...]
+  // Player Row1: ["Darwin","2","7","29%","5","1","1","100%","5","2","1","1","4","-7","Hector","4","5","80%","10","2","2","100%","3","1","1","0","2","7"]
+  // TOTALS Row:  ["TOTALS","7","22","32%","17","3","11","27%","15","5","3","1","9","","TOTALS","10","20","50%","24","4","6","67%","8","6","7","2","5"]
 
-  rows.forEach(row=>{
-    const cells=row._cells||[];
-    const c0=String(cells[0]||'').trim();
-    const c1=String(cells[1]||'').trim().toUpperCase();
-    const c14=String(cells[14]||'').trim();
-    const isEmpty=cells.every(v=>!String(v||'').trim());
+  // So BOTH teams are side by side in EVERY row including TOTALS
+  // Col 0-12 = Team A (name + 12 stats), col 13 = blank, col 14-26 = Team B
 
-    if(isEmpty){prevWasBlank=true;return;}
+  const TEAM_B_START = 14;
+  // Stats offsets from team name col: +1=FGM,+2=FGA,+3=FG%,+4=PTS,+5=3PM,+6=3PA,+7=3P%,+8=REBS,+9=AST,+10=STL,+11=BLK,+12=TO,+13=+/-
+  // Wait - from screenshot col layout: FGM FGA FG% PTS 3PM 3PA 3P% REBS AST STL BLK TO +/-
+  // That is 13 stats. Name at col 0, stats at cols 1-13 for team A
+  // Name at col 14, stats at cols 15-27 for team B
 
-    // Title row
-    if(c0.toUpperCase().startsWith('GAME ')&&c1!=='FGM'){
-      cur={titleA:c0,titleB:c14.toUpperCase().startsWith('GAME ')?c14:'',headerRow:null,playerRows:[]};
+  const blocks = [];
+  let cur = null;
+
+  rows.forEach(row => {
+    const cells = row._cells || [];
+    const c0 = String(cells[0]||'').trim();
+    const c1 = String(cells[1]||'').trim().toUpperCase();
+    const isEmpty = cells.every(v=>!String(v||'').trim());
+    if(isEmpty){ return; }
+
+    // Title row: starts with GAME
+    if(c0.toUpperCase().startsWith('GAME ') && c1 !== 'FGM') {
+      cur = { titleA: c0, titleB: String(cells[14]||'').trim(), headerRow: null, dataRows: [] };
       blocks.push(cur);
-      prevWasBlank=false;
       return;
     }
-
-    // Header row (team name at col0, FGM at col1)
-    if(c1==='FGM'){
-      if(!cur||cur.headerRow){
-        // New block without title
-        cur={titleA:'',titleB:'',headerRow:cells,playerRows:[]};
+    // Header row: col1 = FGM
+    if(c1 === 'FGM') {
+      if(!cur || cur.headerRow) {
+        cur = { titleA: '', titleB: '', headerRow: cells, dataRows: [] };
         blocks.push(cur);
       } else {
-        cur.headerRow=cells;
+        cur.headerRow = cells;
       }
-      prevWasBlank=false;
       return;
     }
-
-    if(cur) cur.playerRows.push(cells);
-    prevWasBlank=false;
+    if(cur) cur.dataRows.push(cells);
   });
 
-  // Auto-number untitled games
-  let gameNum=0;
-  blocks.forEach(b=>{
-    if(!b.titleA){
-      gameNum++;
-      b.titleA='GAME '+gameNum+'- '+t.date;
-    } else {
-      // Extract number from title for tracking
-      const m=b.titleA.match(/GAME\s+(\d+)/i);
-      if(m) gameNum=parseInt(m[1]);
-    }
-    if(b.titleB){
-      const m=b.titleB.match(/GAME\s+(\d+)/i);
-      // titleB is a second game in same title row
-    }
+  // Auto number games without title
+  let gnum = 0;
+  blocks.forEach(b => {
+    if(!b.titleA) { gnum++; b.titleA = 'GAME ' + gnum + '- ' + t.date; }
+    else { const m = b.titleA.match(/GAME\s*(\d+)/i); if(m) gnum = parseInt(m[1]); }
   });
 
-  console.log('Game blocks:',blocks.length, blocks.map(b=>b.titleA+(b.titleB?' & '+b.titleB:'')+'  players:'+b.playerRows.length));
+  console.log('Blocks:', blocks.length, blocks.map(b=>b.titleA+' rows:'+b.dataRows.length));
 
-  function parseTitle(raw,date){
-    if(!raw)return{title:'',date};
-    const parts=raw.split('-').map(s=>s.trim());
-    return{title:parts[0],date:parts.slice(1).join('-').trim()||date};
+  function parseTitle(raw, fallbackDate) {
+    if(!raw) return {title:'', date: fallbackDate};
+    const dash = raw.indexOf('-');
+    if(dash > 0) return { title: raw.slice(0,dash).trim(), date: raw.slice(dash+1).trim()||fallbackDate };
+    return { title: raw.trim(), date: fallbackDate };
   }
 
-  function extractPlayers(block,nameCol,statsStart){
-    return block.playerRows
-      .map(cells=>{
-        const nm=String(cells[nameCol]||'').trim();
-        if(!nm)return null;
-        const up=nm.toUpperCase();
-        if(up==='TOTALS'||up==='TOTAL'||isTeamRow(nm))return null;
-        if(['FGM','FGA','FG%','PTS','3PM','3PA','3P%','REBS','AST','STL','BLK','TO'].includes(up))return null;
-        const rawPm=pval(String(cells[statsStart+12]||'').trim());
-        return{
-          name:nm,
-          fgm:String(cells[statsStart]||'').trim(),
-          fga:String(cells[statsStart+1]||'').trim(),
-          fgp:clean(String(cells[statsStart+2]||'').trim()),
-          pts:String(cells[statsStart+3]||'').trim(),
-          t3m:String(cells[statsStart+4]||'').trim(),
-          t3a:String(cells[statsStart+5]||'').trim(),
-          t3p:clean(String(cells[statsStart+6]||'').trim()),
-          reb:String(cells[statsStart+7]||'').trim(),
-          ast:String(cells[statsStart+8]||'').trim(),
-          stl:String(cells[statsStart+9]||'').trim(),
-          blk:String(cells[statsStart+10]||'').trim(),
-          to:String(cells[statsStart+11]||'').trim(),
-          pmStr:pmfmt(rawPm),
-          pmColor:pmcol(rawPm),
-        };
-      }).filter(Boolean);
-  }
+  function renderGameBlock(block) {
+    if(!block.dataRows.length) return '';
+    const hRow = block.headerRow || [];
+    const teamAName = String(hRow[0]||'').trim();
+    const teamBName = String(hRow[TEAM_B_START]||'').trim();
 
-  function renderTeam(name,players){
-    if(!name||!players.length)return'';
-    const ts=teamStyle(name)||FALLBACK_STYLES[0];
-    return`<tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${name}</td></tr>`+
-    players.map(pl=>`<tr style="background:${ts.bg}">
-      <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(pl.name)}')">${pl.name}</td>
-      <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgp}</td><td class="tg">${pl.pts}</td>
-      <td>${pl.t3m}/${pl.t3a}</td><td>${pl.t3p}</td>
-      <td>${pl.reb}</td><td>${pl.ast}</td><td>${pl.stl}</td><td>${pl.blk}</td><td>${pl.to}</td>
-      <td style="${pl.pmColor}">${pl.pmStr}</td>
-    </tr>`).join('');
-  }
+    const tsA = teamStyle(teamAName) || FALLBACK_STYLES[0];
+    const tsB = teamStyle(teamBName) || FALLBACK_STYLES[1];
 
-  function gameTable(title,date,tbody){
-    if(!tbody)return'';
-    return`<div class="tbl-wrap" style="margin-bottom:12px">
+    // Build rows for team A (cols 0-13) and team B (cols 14-27)
+    let tbodyA = `<tr><td colspan="12" style="background:${tsA.bg};border-top:${tsA.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${tsA.label};padding:10px 14px;">${teamAName}</td></tr>`;
+    let tbodyB = `<tr><td colspan="12" style="background:${tsB.bg};border-top:${tsB.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${tsB.label};padding:10px 14px;">${teamBName}</td></tr>`;
+
+    block.dataRows.forEach(cells => {
+      // Team A row
+      const nameA = String(cells[0]||'').trim();
+      const nameB = String(cells[TEAM_B_START]||'').trim();
+      const isTotal = nameA.toUpperCase() === 'TOTALS';
+
+      function makeRow(name, statsStart, ts, isTotal) {
+        if(!name) return '';
+        const s = (i) => String(cells[statsStart+i]||'').trim();
+        const rawPm = pval(s(12));
+
+        if(isTotal) {
+          return `<tr style="background:${ts.bg};border-top:1px solid rgba(255,255,255,0.08)">
+            <td style="text-align:left;padding-left:22px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:${ts.label}">Totals</td>
+            <td style="font-size:11px">${s(0)}/${s(1)}</td>
+            <td style="font-size:11px">${clean(s(2))}</td>
+            <td style="font-size:11px;color:var(--gold-light);font-weight:700">${s(3)}</td>
+            <td style="font-size:11px">${s(4)}/${s(5)}</td>
+            <td style="font-size:11px">${clean(s(6))}</td>
+            <td style="font-size:11px">${s(7)}</td><td style="font-size:11px">${s(8)}</td>
+            <td style="font-size:11px">${s(9)}</td><td style="font-size:11px">${s(10)}</td>
+            <td style="font-size:11px">${s(11)}</td>
+            <td style="font-size:11px;${pmcol(rawPm)}">${pmfmt(rawPm)}</td>
+          </tr>`;
+        }
+        if(isTeamRow(name)) return '';
+        if(['FGM','FGA','FG%','PTS'].includes(name.toUpperCase())) return '';
+
+        return `<tr style="background:${ts.bg}">
+          <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(name)}')">${name}</td>
+          <td>${s(0)}/${s(1)}</td><td>${clean(s(2))}</td>
+          <td class="tg">${s(3)}</td>
+          <td>${s(4)}/${s(5)}</td><td>${clean(s(6))}</td>
+          <td>${s(7)}</td><td>${s(8)}</td><td>${s(9)}</td><td>${s(10)}</td><td>${s(11)}</td>
+          <td style="${pmcol(rawPm)}">${pmfmt(rawPm)}</td>
+        </tr>`;
+      }
+
+      if(nameA) tbodyA += makeRow(nameA, 1, tsA, isTotal);
+      if(nameB) tbodyB += makeRow(nameB, TEAM_B_START+1, tsB, nameB.toUpperCase()==='TOTALS');
+    });
+
+    const g1 = parseTitle(block.titleA, t.date);
+    return `<div class="tbl-wrap" style="margin-bottom:12px">
       <div class="tbl-hd" style="background:var(--panel2);display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">${title}</span>
-        <span style="font-size:10px;color:var(--chalk-dim)">${date}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">${g1.title}</span>
+        <span style="font-size:10px;color:var(--chalk-dim)">${g1.date}</span>
       </div>
       <div class="tbl-scroll"><table>
         <thead><tr>
@@ -1028,52 +1034,13 @@ function buildGamesSection(rows, t) {
           <th>FGM/A</th><th>FG%</th><th>PTS</th><th>3PM/A</th><th>3P%</th>
           <th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/-</th>
         </tr></thead>
-        <tbody>${tbody}</tbody>
+        <tbody>${tbodyA}${tbodyB}</tbody>
       </table></div>
     </div>`;
   }
 
-  // Render blocks
-  // Each block has titleA (left game) and optionally titleB (right game)
-  // Team A is at cols 0 (name) + 1-13 (stats)
-  // Team B is at cols 14 (name) + 15-27 (stats)
-  const gHtml=blocks.map(block=>{
-    if(!block.headerRow&&!block.playerRows.length)return'';
-    const hRow=block.headerRow||[];
-    const team1=String(hRow[0]||'').trim();
-    const team2=String(hRow[TEAM_B_COL]||'').trim();
-
-    const p1=extractPlayers(block,0,1);       // Team A: name@0, stats@1
-    const p2=extractPlayers(block,TEAM_B_COL,TEAM_B_COL+1); // Team B: name@14, stats@15
-
-    const g1=parseTitle(block.titleA,t.date);
-    const tbody1=renderTeam(team1,p1)+renderTeam(team2,p2);
-
-    let html=gameTable(g1.title||'Game',g1.date,tbody1);
-
-    // If titleB exists, it's a second game using the SAME player rows but different perspective
-    // Actually from screenshots, each title row covers ONE game (the right column is just another game)
-    // But looking at screenshots: GAME 1 has TEAM BLUE vs TEAM WHITE
-    //                              GAME 2 has TEAM BLACK vs TEAM WHITE  
-    // These are separate row blocks, so titleB just names the right-side game in the SAME block
-    if(block.titleB){
-      const g2=parseTitle(block.titleB,t.date);
-      // Right-side game: Team2 stats are already in p2, but we need the "other" team
-      // For side-by-side layout, team1=left game team1, team2=left game team2
-      // The right game (titleB) has its own teams in the same row
-      // Actually: in a 29-col row, cols 0-13=game1 teams, cols 14-27=game2 teams
-      // But game1 col0=teamA name, game2 col14=teamB name... 
-      // Looking at title row: col0="GAME 3", col14="GAME 4"
-      // Header row: col0=TeamA_game3, col14=TeamA_game4
-      // So we need to find where game4's TeamB is...
-      // For now render game2 with swapped teams (approximation)
-      const tbody2=renderTeam(team2,p2)+renderTeam(team1,p1);
-      html+=gameTable(g2.title,g2.date,tbody2);
-    }
-    return html;
-  }).filter(Boolean).join('');
-
-  document.getElementById('t-games-section').innerHTML=`
+  const gHtml = blocks.map(renderGameBlock).filter(Boolean).join('');
+  document.getElementById('t-games-section').innerHTML = `
     <div class="sl">Game by Game Stats</div>
     ${gHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games found.</div>'}`;
 }
