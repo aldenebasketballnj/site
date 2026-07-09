@@ -550,23 +550,15 @@ function renderHero() {
   const pillMvp  = document.getElementById('hero-pill-mvp');
   if(pillPpg)  pillPpg.textContent  = 'Top Scorer: ' + byPpg[0].ppg.toFixed(1) + ' PPG -- ' + byPpg[0].name;
   if(pillWins) pillWins.textContent = 'Wins Leader: ' + byW[0].w + 'W -- ' + byW[0].name;
-  // Use PotG as MVP/POTG award count per tournament
-  // PotG in averages tab = total POtG awards across all tournaments
-  const byMvp=[...players].filter(p=>p.potg>0).sort((a,b)=>b.potg-a.potg);
-  if(pillMvp && byMvp.length>0) {
-    const cnt=Math.round(byMvp[0].potg);
-    pillMvp.textContent = cnt + 'x MVP -- ' + byMvp[0].name;
+  // MVP pill — PotG in sheet is a per-game RATE (e.g. 0.50), not a count
+  // 1st Place column = actual number of tournament 1st place / MVP awards
+  const byFirst=[...players].filter(p=>p.firstPlace>0).sort((a,b)=>b.firstPlace-a.firstPlace);
+  if(pillMvp && byFirst.length>0) {
+    const cnt=Math.round(byFirst[0].firstPlace);
+    pillMvp.textContent = cnt + 'x MVP -- ' + byFirst[0].name;
     pillMvp.style.display='';
-  } else {
-    // Fallback: use 1st Place column
-    const byFirst=[...players].filter(p=>p.firstPlace>0).sort((a,b)=>b.firstPlace-a.firstPlace);
-    if(pillMvp && byFirst.length>0) {
-      const cnt=Math.round(byFirst[0].firstPlace);
-      pillMvp.textContent = cnt + 'x Champ -- ' + byFirst[0].name;
-      pillMvp.style.display='';
-    } else if(pillMvp) {
-      pillMvp.style.display='none';
-    }
+  } else if(pillMvp) {
+    pillMvp.style.display='none';
   }
 }
 
