@@ -37,19 +37,16 @@ body.light-mode .hero-fade-bottom{background:linear-gradient(to bottom,transpare
 @keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-25px,15px) scale(1.04);}66%{transform:translate(20px,-20px) scale(0.98);}}
 
 /* HEADER */
-header{background:var(--panel);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:54px;}
-.logo{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;display:flex;align-items:center;gap:8px;}
+header{background:var(--panel);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:56px;gap:20px;}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;flex-shrink:0;}
 .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);}
 .logo span{color:var(--gold);}
-.header-sub{font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;}
-@media(max-width:480px){.header-sub{display:none;}}
-
-/* NAV */
-nav{background:var(--black);border-bottom:1px solid var(--border);display:flex;padding:0 14px;overflow-x:auto;scrollbar-width:none;}
-nav::-webkit-scrollbar{display:none;}
-.tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:13px 16px;border:none;background:transparent;color:var(--chalk-dim);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;}
+header nav{background:transparent;border:none;display:flex;padding:0;overflow-x:auto;scrollbar-width:none;flex:1;justify-content:flex-end;}
+header nav::-webkit-scrollbar{display:none;}
+.tab{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:0 14px;border:none;background:transparent;color:var(--chalk-dim);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;height:56px;display:flex;align-items:center;}
 .tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab:hover:not(.active){color:var(--chalk);}
+@media(max-width:500px){.tab{padding:0 10px;font-size:10px;}}
 
 main{max-width:1140px;margin:0 auto;padding:22px 14px 80px;}
 
@@ -201,15 +198,13 @@ body.light-mode nav{background:#F5F3EE;}
 
 <header>
   <div class="logo" onclick="showPage('home')"><div class="logo-dot"></div>Aldene <span>Basketball</span></div>
-  <div class="header-sub">Est. 2018 &middot; Roselle Park, NJ</div>
+  <nav>
+    <button class="tab active" data-page="home" onclick="showPage('home')">Home</button>
+    <button class="tab" data-page="players" onclick="showPage('players')">Players</button>
+    <button class="tab" data-page="leaderboard" onclick="showPage('leaderboard')">Leaderboard</button>
+    <button class="tab" data-page="tournaments" onclick="showPage('tournaments')">Tournaments</button>
+  </nav>
 </header>
-
-<nav>
-  <button class="tab active" data-page="home" onclick="showPage('home')">Home</button>
-  <button class="tab" data-page="players" onclick="showPage('players')">Players</button>
-  <button class="tab" data-page="leaderboard" onclick="showPage('leaderboard')">Leaderboard</button>
-  <button class="tab" data-page="tournaments" onclick="showPage('tournaments')">Tournaments</button>
-</nav>
 
 <main>
   <div id="err" class="err"></div>
@@ -330,7 +325,7 @@ body.light-mode nav{background:#F5F3EE;}
   </div>
 </main>
 
-<footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:20px;margin-top:40px;">
+<footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:sticky;bottom:0;z-index:100;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
       Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a>
@@ -964,78 +959,84 @@ function buildAvgSection(rows, t) {
 function buildGamesSection(rows, t) {
   if(!rows.length){ document.getElementById('t-games-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data.</div>'; return; }
 
-  const allCols = Object.keys(rows[0]);
-  // Game log: games laid out side by side as column groups
-  // Each game group: col[i]=PlayerName/TeamName, col[i+1]=FGM, [+2]=FGA, [+3]=FG%,
-  // [+4]=PTS, [+5]=3PM, [+6]=3PA, [+7]=3P%, [+8]=REBS, [+9]=AST, [+10]=STL, [+11]=BLK, [+12]=TO, [+13]=+/-
-  // Games are separated by a blank column
+  // Game log structure: games side by side in column groups
+  // Each group: col[i]=name, col[i+1]=FGM, [+2]=FGA, [+3]=FG%, [+4]=PTS,
+  //             col[i+5]=3PM, [+6]=3PA, [+7]=3P%, [+8]=REBS, [+9]=AST,
+  //             col[i+10]=STL, [+11]=BLK, [+12]=TO, [+13]=+/-
+  // Groups separated by a blank column
+  // Total stats cols per game = 14 (name + 13 stats)
 
-  // Find game column start indices - where _cells[i] contains "GAME"
-  // Strategy: find columns whose FIRST non-empty value across rows contains "GAME"
-  const gameStartCols = [];
-  allCols.forEach((col, ci) => {
-    // Check if any row has a value containing "GAME" at this column position
-    const hasGame = rows.some(r => {
-      const v = String((r._cells&&r._cells[ci])||r[col]||'').trim().toUpperCase();
-      return v.includes('GAME') && v.length > 4;
-    });
-    if(hasGame) gameStartCols.push(ci);
+  const STATS_PER_GAME = 14; // name + FGM+FGA+FG%+PTS+3PM+3PA+3P%+REBS+AST+STL+BLK+TO+PM
+
+  // Find game title row - the row where cells contain "GAME X"
+  // and find which column indices each game starts at
+  let gameTitleRow = null;
+  let gameColStarts = [];
+
+  rows.forEach(row => {
+    const cells = row._cells || [];
+    const hasGame = cells.some(v => String(v||'').trim().toUpperCase().startsWith('GAME '));
+    if(hasGame && !gameTitleRow) {
+      gameTitleRow = cells;
+      // Find all positions where a game title appears
+      cells.forEach((v, i) => {
+        if(String(v||'').trim().toUpperCase().startsWith('GAME ')) {
+          gameColStarts.push(i);
+        }
+      });
+    }
   });
 
-  console.log('Game start cols:', gameStartCols);
-
-  if(!gameStartCols.length){
-    // Fallback: use column NAMES that contain GAME
-    allCols.forEach((col,ci) => {
-      if(col.toUpperCase().includes('GAME')) gameStartCols.push(ci);
-    });
+  // If no explicit game title row, infer from column spacing
+  if(!gameColStarts.length) {
+    // Try: game starts at col 0, then every STATS_PER_GAME+1 cols (extra blank col)
+    const totalCols = (rows[0]._cells||[]).length;
+    for(let i=0; i<totalCols; i+=STATS_PER_GAME+1) {
+      gameColStarts.push(i);
+    }
   }
 
-  if(!gameStartCols.length){
-    document.getElementById('t-games-section').innerHTML=`<div style="padding:16px;color:var(--chalk-dim)">No game columns found.</div>`;
-    return;
-  }
+  console.log('Game col starts:', gameColStarts, 'Title row:', gameTitleRow);
 
-  // Helper: parse +/- including (6)=-6 format
-  function pval(v){
+  function pval(v) {
     if(!v||v==='-'||v==='')return null;
     v=String(v).trim();
     if(v.startsWith('(')&&v.endsWith(')'))return -parseFloat(v.slice(1,-1))||0;
     return parseFloat(v)||null;
   }
 
-  const gamesHtml = gameStartCols.map((startCol, gi) => {
-    // Find the game title from this column
-    let gameTitle='', gameDate='';
-    rows.forEach(r => {
-      const v = String((r._cells&&r._cells[startCol])||'').trim();
-      if(v.toUpperCase().includes('GAME') && !gameTitle) {
-        // "GAME 1- 7/5/2026" or "GAME 1"
-        const parts = v.split('-').map(s=>s.trim());
-        gameTitle = parts[0] || v;
-        gameDate  = parts[1] || t.date;
-      }
-    });
+  const gamesHtml = gameColStarts.map((startCol, gi) => {
+    // Get game title from title row or default
+    let gameTitle = gameTitleRow ? String(gameTitleRow[startCol]||'').trim() : '';
+    let gameDate = t.date;
+    if(gameTitle.includes('-')) {
+      const parts = gameTitle.split('-').map(s=>s.trim());
+      gameTitle = parts[0];
+      gameDate = parts[1] || t.date;
+    }
     if(!gameTitle) gameTitle = 'Game ' + (gi+1);
 
-    // Stats at offsets from startCol:
-    // +0=name, +1=FGM, +2=FGA, +3=FG%, +4=PTS, +5=3PM, +6=3PA, +7=3P%
-    // +8=REBS, +9=AST, +10=STL, +11=BLK, +12=TO, +13=+/-
-    const teams=[]; let curTeam=null, curTs=FALLBACK_STYLES[0], fbi=0;
+    // Process rows for THIS game only using startCol offset
+    const teams = [];
+    let curTeam = null, curTs = FALLBACK_STYLES[0], fbi = 0;
 
     rows.forEach(row => {
       const cells = row._cells || [];
       const cellVal = String(cells[startCol]||'').trim();
       if(!cellVal) return;
       const up = cellVal.toUpperCase();
-      if(up.includes('GAME')||up==='TOTALS'||up==='TOTAL'||up.endsWith('TOTALS:')) return;
 
-      if(isTeamRow(cellVal)){
-        curTs=teamStyle(cellVal)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
-        curTeam={name:cellVal, style:curTs, players:[]};
+      // Skip game title rows and totals
+      if(up.startsWith('GAME ') || up==='TOTALS' || up==='TOTAL' || up.endsWith('TOTALS:')) return;
+
+      // Team header
+      if(isTeamRow(cellVal)) {
+        curTs = teamStyle(cellVal) || FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
+        curTeam = {name:cellVal, style:curTs, players:[]};
         teams.push(curTeam);
         return;
       }
+
       if(!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
 
       const p=(off)=>String(cells[startCol+off]||'').trim();
@@ -1053,10 +1054,15 @@ function buildGamesSection(rows, t) {
       });
     });
 
-    if(!teams.length) return '';
+    // Only show games that actually have player data
+    const hasPlayers = teams.some(tm=>tm.players.length>0);
+    if(!hasPlayers) return '';
 
-    const teamsHtml = teams.map(team=>{
-      const ts=team.style;
+    // Limit to 2 teams per game (the actual participants)
+    const gamTeams = teams.filter(tm=>tm.players.length>0).slice(0,2);
+
+    const teamsHtml = gamTeams.map(team => {
+      const ts = team.style;
       return `
         <tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${team.name}</td></tr>
         ${team.players.map(pl=>`<tr style="background:${ts.bg}">
@@ -1089,7 +1095,7 @@ function buildGamesSection(rows, t) {
 
   document.getElementById('t-games-section').innerHTML=`
     <div class="sl">Game by Game Stats</div>
-    ${gamesHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games parsed.</div>'}`;
+    ${gamesHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games found.</div>'}`;
 }
 
 function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
