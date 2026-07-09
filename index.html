@@ -116,6 +116,60 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 .tcard-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;text-transform:uppercase;margin-bottom:3px;}
 .tcard-date{font-size:11px;color:var(--chalk-dim);margin-bottom:12px;}
 
+/* TAGLINE SPARKLE ANIMATION */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes fadeSlideUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.hero-tagline {
+  animation: fadeSlideUp 0.8s ease forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+.hero-tagline-inner {
+  display: inline-block;
+  background: linear-gradient(90deg,
+    rgba(238,234,226,0.4) 0%,
+    rgba(238,234,226,0.4) 30%,
+    rgba(232,172,74,0.95) 50%,
+    rgba(238,234,226,0.4) 70%,
+    rgba(238,234,226,0.4) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  animation-delay: 1.2s;
+}
+
+/* SLOT MACHINE for hero cards */
+@keyframes slotSpin {
+  0%   { transform: translateY(-100%); opacity:0; }
+  15%  { transform: translateY(8px);   opacity:1; }
+  30%  { transform: translateY(-4px);  opacity:1; }
+  45%  { transform: translateY(2px);   opacity:1; }
+  60%  { transform: translateY(0);     opacity:1; }
+  100% { transform: translateY(0);     opacity:1; }
+}
+.hcard-val.slot-animate {
+  display: inline-block;
+  animation: slotSpin 0.7s cubic-bezier(0.23,1,0.32,1) forwards;
+  opacity: 0;
+}
+
+/* HERO title animation */
+@keyframes heroTitle {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.hero-title-aldene   { animation: heroTitle 0.7s ease forwards; animation-delay:0.1s; opacity:0; }
+.hero-title-bball    { animation: heroTitle 0.7s ease forwards; animation-delay:0.25s; opacity:0; }
+
 /* LIGHT MODE */
 body.light-mode{--black:#F5F3EE;--panel:#FFFFFF;--panel2:#F0EDE8;--border:#DDD9D0;--chalk:#1a1a1a;--chalk-mid:#5a5650;--chalk-dim:#9a9690;--gold:#9a6e1a;--gold-light:#C8902A;--green:#1a7a42;--red:#a02020;}
 body.light-mode header,body.light-mode #site-footer{background:#FFFFFF;}
@@ -176,10 +230,12 @@ body.light-mode nav{background:#F5F3EE;}
       <div style="position:relative;z-index:2;padding:80px 20px 70px;width:100%;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;">Est. 2018 &middot; Roselle Park, NJ</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(58px,13vw,108px);font-weight:900;line-height:0.85;text-transform:uppercase;letter-spacing:-0.02em;margin-bottom:24px;">
-          <div style="color:#EEEAE2;text-shadow:0 0 80px rgba(200,144,42,0.15);">Aldene</div>
-          <div style="color:var(--gold);text-shadow:0 0 40px rgba(200,144,42,0.4),0 0 80px rgba(200,144,42,0.2);">Basketball</div>
+          <div class="hero-title-aldene" style="color:#EEEAE2;text-shadow:0 0 80px rgba(200,144,42,0.15);">Aldene</div>
+          <div class="hero-title-bball" style="color:var(--gold);text-shadow:0 0 40px rgba(200,144,42,0.4),0 0 80px rgba(200,144,42,0.2);">Basketball</div>
         </div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(15px,3vw,21px);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(238,234,226,0.5);margin-bottom:36px;">Run it back. The numbers don&apos;t lie.</div>
+        <div class="hero-tagline" style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(15px,3vw,21px);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:36px;">
+          <span class="hero-tagline-inner">Run it back. The numbers don&apos;t lie.</span>
+        </div>
 
         <!-- Stat pills -->
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
@@ -400,7 +456,9 @@ function buildPlayer(row) {
     w:  n(g(row,'W')||p(15)),
     l:  n(g(row,'L')||p(16)),
     winPct:g(row,'WIN%','W%')||p(17)||'0%',
-    potg: n(g(row,'PotG','POTG')||p(18)),
+    potg:       n(g(row,'PotG','POTG')||p(18)),
+    firstPlace: n(g(row,'1st Place')||p(19)),
+    secondPlace:n(g(row,'2nd Place')||p(20)),
   };
 }
 
@@ -430,8 +488,12 @@ function renderHero() {
     {lbl:'Most Wins',       val:byW[0].w,                 name:byW[0].name},
     {lbl:'+/- Leader',      val:pm(byPm[0].pm_val),       name:byPm[0].name},
   ];
-  document.getElementById('hero-grid').innerHTML=cards.map(c=>`
-    <div class="hcard"><div class="hcard-lbl">${c.lbl}</div><div class="hcard-val">${c.val}</div><div class="hcard-name">${c.name}</div></div>`).join('');
+  document.getElementById('hero-grid').innerHTML=cards.map((c,i)=>`
+    <div class="hcard">
+      <div class="hcard-lbl">${c.lbl}</div>
+      <div class="hcard-val slot-animate" style="animation-delay:${0.1+i*0.08}s">${c.val}</div>
+      <div class="hcard-name">${c.name}</div>
+    </div>`).join('');
 
   // Stat pills - Top Scorer, Wins Leader, Most MVPs
   const pillPpg  = document.getElementById('hero-pill-ppg');
@@ -439,12 +501,23 @@ function renderHero() {
   const pillMvp  = document.getElementById('hero-pill-mvp');
   if(pillPpg)  pillPpg.textContent  = 'Top Scorer: ' + byPpg[0].ppg.toFixed(1) + ' PPG -- ' + byPpg[0].name;
   if(pillWins) pillWins.textContent = 'Wins Leader: ' + byW[0].w + 'W -- ' + byW[0].name;
+  // Use PotG as MVP/POTG award count per tournament
+  // PotG in averages tab = total POtG awards across all tournaments
   const byMvp=[...players].filter(p=>p.potg>0).sort((a,b)=>b.potg-a.potg);
   if(pillMvp && byMvp.length>0) {
     const cnt=Math.round(byMvp[0].potg);
     pillMvp.textContent = cnt + 'x MVP -- ' + byMvp[0].name;
-  } else if(pillMvp) {
-    pillMvp.style.display='none';
+    pillMvp.style.display='';
+  } else {
+    // Fallback: use 1st Place column
+    const byFirst=[...players].filter(p=>p.firstPlace>0).sort((a,b)=>b.firstPlace-a.firstPlace);
+    if(pillMvp && byFirst.length>0) {
+      const cnt=Math.round(byFirst[0].firstPlace);
+      pillMvp.textContent = cnt + 'x Champ -- ' + byFirst[0].name;
+      pillMvp.style.display='';
+    } else if(pillMvp) {
+      pillMvp.style.display='none';
+    }
   }
 }
 
