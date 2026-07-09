@@ -193,7 +193,7 @@ body.light-mode nav{background:#F5F3EE;}
 
 <div id="loading-screen">
   <div class="spin"></div>
-  <div class="load-txt">Connecting to Google Sheets...</div>
+  <div class="load-txt">Data warming up! Get Ready</div>
 </div>
 
 <header>
@@ -328,7 +328,7 @@ body.light-mode nav{background:#F5F3EE;}
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:sticky;bottom:0;z-index:100;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.1</span>
+      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.2</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
@@ -959,202 +959,109 @@ function buildAvgSection(rows, t) {
 function buildGamesSection(rows, t) {
   if(!rows.length){ document.getElementById('t-games-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data.</div>'; return; }
 
-  // From console analysis:
-  // Row0: ["TEAM BLUE","FGM","FGA","FG%","PTS","3PM","3PA","3P%","REBS","AST","STL","BLK","TO","","TEAM BLACK","FGM",...]
-  // Row1: ["Darwin","2","7","29%","5","1","1","100%","5","2","1","1","4","-7","Fernando",...]
-  // Structure: 14 cols per game (col0=name, 1=FGM,2=FGA,3=FG%,4=PTS,5=3PM,6=3PA,7=3P%,8=REBS,9=AST,10=STL,11=BLK,12=TO,13=+/-) then 1 blank = 15 cols total
-  // Title row: ["GAME 3- 7/5/2026","","","","","","","","","","","","","","GAME 4- 7/5/2026",...]
+  // The game log tab layout (from console data):
+  // Row0 of each game block = ["TEAM A","FGM","FGA","FG%","PTS","3PM","3PA","3P%","REBS","AST","STL","BLK","TO","","TEAM B","FGM","FGA",...]
+  // Row1+ = player data: ["Darwin","2","7","29%","5","1","1","100%","5","2","1","1","4","-7","Fernando",...]
+  // Games are separated by a "GAME X- date" title row
+  // Structure per game: 14 cols for team A (col0=name,1-12=stats,13=+/-) + 1 blank + 14 cols for team B
 
-  const COLS_PER_GAME = 15; // 14 stats + 1 blank separator
-  const totalCols = (rows[0]._cells || []).length;
+  const TEAM_COLS = 14; // name + 13 stats
+  const BLANK_SEP = 1;
+  const GAME_WIDTH = TEAM_COLS + BLANK_SEP + TEAM_COLS; // 29 cols total matches console!
 
-  // Find game title row — contains "GAME" text
-  let titleRowCells = null;
-  let headerRowCells = null; // row with FGM,FGA,FG% etc
-  const playerRows = [];
+  // Split rows into game blocks by finding title rows (contain "GAME")
+  const gameBlocks = [];
+  let currentBlock = null;
 
   rows.forEach(row => {
     const cells = row._cells || [];
-    const first = String(cells[0]||'').trim().toUpperCase();
-    const hasgame = cells.some(v => String(v||'').toUpperCase().startsWith('GAME '));
+    const c0 = String(cells[0]||'').trim();
+    const c1 = String(cells[1]||'').trim().toUpperCase();
 
-    if(hasgame && !titleRowCells) {
-      titleRowCells = cells;
+    // Game title row: first cell starts with "GAME"
+    if(c0.toUpperCase().startsWith('GAME ')) {
+      currentBlock = { titleCell: c0, rows: [] };
+      gameBlocks.push(currentBlock);
       return;
     }
-    // Header row has FGM as second cell
-    if(String(cells[1]||'').trim().toUpperCase() === 'FGM' && !headerRowCells) {
-      headerRowCells = cells;
-      return;
-    }
-    playerRows.push(cells);
+    if(currentBlock) currentBlock.rows.push(cells);
   });
 
-  // Determine game start columns from title row
-  const gameStarts = [];
-  if(titleRowCells) {
-    titleRowCells.forEach((v,i) => {
-      if(String(v||'').toUpperCase().startsWith('GAME ')) gameStarts.push(i);
-    });
-  }
-  // Fallback: games start at 0, 15, 30...
-  if(!gameStarts.length) {
-    for(let i=0; i<totalCols; i+=COLS_PER_GAME) gameStarts.push(i);
+  // If no title rows found, treat entire dataset as one game block
+  if(!gameBlocks.length && rows.length) {
+    gameBlocks.push({ titleCell: 'Game 1', rows: rows.map(r=>r._cells||[]) });
   }
 
-  console.log('Fixed game starts:', gameStarts, 'totalCols:', totalCols);
+  console.log('Game blocks found:', gameBlocks.length, gameBlocks.map(b=>b.titleCell));
 
   function pval(v){
     if(!v||v==='-'||v==='')return null;
     v=String(v).trim();
-    if(v.startsWith('(')&&v.endsWith(')'))return -parseFloat(v.slice(1,-1))||0;
+    if(v.startsWith('(')&&v.endsWith(')'))return -(parseFloat(v.slice(1,-1))||0);
     const f=parseFloat(v); return isNaN(f)?null:f;
   }
-  function pmfmt(v){
-    if(v===null)return '-';
-    return v>0?'+'+v:String(v);
-  }
-  function pmcol(v){
-    if(v===null||v===0)return '';
-    return v>0?'color:var(--green);font-weight:700':'color:var(--red);font-weight:700';
-  }
+  function pmfmt(v){ return v===null?'-':v>0?'+'+v:String(v); }
+  function pmcol(v){ return v===null||v===0?'':(v>0?'color:var(--green);font-weight:700':'color:var(--red);font-weight:700'); }
 
-  const gamesHtml = gameStarts.map((startCol, gi) => {
-    // Game title from title row
-    let gameTitle = titleRowCells ? String(titleRowCells[startCol]||'').trim() : '';
-    let gameDate = t.date;
+  const gHtml = gameBlocks.map((block, gi) => {
+    // Parse game title and date
+    let gameTitle = block.titleCell || ('Game '+(gi+1));
+    let gameDate  = t.date;
     if(gameTitle.includes('-')) {
       const parts = gameTitle.split('-').map(s=>s.trim());
       gameTitle = parts[0];
       gameDate  = parts.slice(1).join('-').trim() || t.date;
     }
-    if(!gameTitle) gameTitle = 'Game ' + (gi+1);
 
-    // From Row0: col[startCol]=TeamName, col[startCol+1]=FGM header (skip)
-    // Actual players start in playerRows
-    // Each game's team is identified by header row: col[startCol] = "TEAM BLUE" etc
+    const blockRows = block.rows;
+    if(!blockRows.length) return '';
 
-    // Get team name from header row (Row0 which has TEAM BLUE, FGM, FGA...)
-    const team1Name = headerRowCells ? String(headerRowCells[startCol]||'').trim() : '';
-    const team2StartCol = gameStarts[gi+1]; // next game start = same game's second team? No...
+    // First row of block = team header row
+    // ["TEAM BLUE","FGM","FGA","FG%","PTS","3PM","3PA","3P%","REBS","AST","STL","BLK","TO","","TEAM BLACK",...]
+    const headerCells = blockRows[0];
+    const team1Name = String(headerCells[0]||'').trim();
+    const team2Name = String(headerCells[TEAM_COLS + BLANK_SEP]||'').trim();
 
-    // Actually from Row0: ["TEAM BLUE","FGM",...,"","TEAM BLACK","FGM",...]
-    // So within each game block (15 cols), col[0]=Team1Name, col[14]=Team2? No...
-    // Wait: Row0 col0="TEAM BLUE", col14="TEAM BLACK" — these are BOTH in the SAME game!
-    // So game 1 & 2 are side by side within the 29 cols
-    // Game 1: cols 0-13 (TEAM BLUE players)
-    // The SEPARATOR col is col 13 (the "" between teams)
-    // Then Game 1 Team 2: cols 14-27 (TEAM BLACK players)
-    // But title row has GAME 3 at col 0, GAME 4 at col ~14
+    // Remaining rows = player data
+    const playerDataRows = blockRows.slice(1);
 
-    // So each "game" in gameStarts is actually one TEAM's data for that game
-    // And the games are paired: gameStarts[0]+gameStarts[1] = Game 3, gameStarts[2]+gameStarts[3] = Game 4
-
-    // Let's rebuild: find ALL team blocks, then pair them into games
-    return null; // handled below
-  });
-
-  // CORRECT APPROACH: scan header row for team names, pair consecutive teams as one game
-  const teamBlocks = [];
-  if(headerRowCells) {
-    headerRowCells.forEach((v, i) => {
-      const val = String(v||'').trim();
-      if(val && isTeamRow(val) && !val.toUpperCase().includes('FGM')) {
-        teamBlocks.push({ teamName: val, startCol: i });
-      }
-    });
-  }
-
-  // If no header row, find teams from player rows
-  if(!teamBlocks.length) {
-    // Use title row game starts, assume team name is in first cell of player rows at each game col
-    gameStarts.forEach((sc, gi) => {
-      // Find first non-empty non-game cell at this col position
-      for(const cells of playerRows) {
-        const v = String(cells[sc]||'').trim();
-        if(v && !v.toUpperCase().startsWith('GAME') && isTeamRow(v)) {
-          teamBlocks.push({ teamName: v, startCol: sc });
-          break;
-        }
-      }
-    });
-  }
-
-  console.log('Team blocks:', teamBlocks.map(b=>b.teamName+'@'+b.startCol));
-
-  // Pair team blocks into games using title row
-  // title row: GAME3 at col X, GAME4 at col Y => game3=[teamBlock at X, teamBlock at Y-something]
-  // Simplest: 2 teams per game, so pair teamBlocks[0]+teamBlocks[1]=game1, [2]+[3]=game2, etc
-  const games = [];
-
-  // Get game titles from title row
-  const gameTitles = [];
-  if(titleRowCells) {
-    titleRowCells.forEach((v,i) => {
-      if(String(v||'').toUpperCase().startsWith('GAME ')) {
-        let title = String(v||'').trim();
-        let date = t.date;
-        if(title.includes('-')){const p=title.split('-').map(s=>s.trim());title=p[0];date=p.slice(1).join('-').trim()||t.date;}
-        gameTitles.push({title, date, col:i});
-      }
-    });
-  }
-
-  // Build games: each game title corresponds to 2 team blocks
-  // Find which team blocks belong to each game based on column proximity
-  if(gameTitles.length > 0 && teamBlocks.length > 0) {
-    gameTitles.forEach((gt, gi) => {
-      const nextGt = gameTitles[gi+1];
-      const endCol = nextGt ? nextGt.col : totalCols;
-      // Team blocks whose startCol is between this game's col and next game's col
-      const gameTeams = teamBlocks.filter(b => b.startCol >= gt.col && b.startCol < endCol);
-      if(gameTeams.length) games.push({title:gt.title, date:gt.date, teams:gameTeams});
-    });
-  } else if(teamBlocks.length >= 2) {
-    // Fallback: pair every 2 team blocks
-    for(let i=0; i<teamBlocks.length; i+=2) {
-      const g = { title:'Game '+(Math.floor(i/2)+1), date:t.date, teams:[teamBlocks[i]] };
-      if(teamBlocks[i+1]) g.teams.push(teamBlocks[i+1]);
-      games.push(g);
-    }
-  }
-
-  console.log('Games:', games.map(g=>g.title+': '+g.teams.map(tm=>tm.teamName).join(' vs ')));
-
-  // For each game, extract player rows per team
-  const gHtml = games.map(game => {
-    const teamsHtml = game.teams.map(tb => {
-      const ts = teamStyle(tb.teamName) || FALLBACK_STYLES[0];
-      const sc = tb.startCol;
-
-      // Collect players for this team: rows where cell[sc] is a player name (not team/game/empty)
+    function extractTeamPlayers(startCol) {
       const players = [];
-      playerRows.forEach(cells => {
-        const v = String(cells[sc]||'').trim();
-        if(!v || isTeamRow(v) || v.toUpperCase().startsWith('GAME') || v.toUpperCase()==='TOTALS') return;
-        const rawPm = pval(String(cells[sc+13]||'').trim());
+      playerDataRows.forEach(cells => {
+        const nm = String(cells[startCol]||'').trim();
+        if(!nm || nm.toUpperCase()==='TOTALS' || nm.toUpperCase()==='TOTAL') return;
+        // Skip if this looks like a team name or header
+        if(isTeamRow(nm)) return;
+        const rawPm = pval(String(cells[startCol+13]||'').trim());
         players.push({
-          name: v,
-          fgm: String(cells[sc+1]||'').trim(),
-          fga: String(cells[sc+2]||'').trim(),
-          fgp: clean(String(cells[sc+3]||'').trim()),
-          pts: String(cells[sc+4]||'').trim(),
-          t3m: String(cells[sc+5]||'').trim(),
-          t3a: String(cells[sc+6]||'').trim(),
-          t3p: clean(String(cells[sc+7]||'').trim()),
-          reb: String(cells[sc+8]||'').trim(),
-          ast: String(cells[sc+9]||'').trim(),
-          stl: String(cells[sc+10]||'').trim(),
-          blk: String(cells[sc+11]||'').trim(),
-          to:  String(cells[sc+12]||'').trim(),
-          pmStr: pmfmt(rawPm),
-          pmColor: pmcol(rawPm),
+          name: nm,
+          fgm:  String(cells[startCol+1]||'').trim(),
+          fga:  String(cells[startCol+2]||'').trim(),
+          fgp:  clean(String(cells[startCol+3]||'').trim()),
+          pts:  String(cells[startCol+4]||'').trim(),
+          t3m:  String(cells[startCol+5]||'').trim(),
+          t3a:  String(cells[startCol+6]||'').trim(),
+          t3p:  clean(String(cells[startCol+7]||'').trim()),
+          reb:  String(cells[startCol+8]||'').trim(),
+          ast:  String(cells[startCol+9]||'').trim(),
+          stl:  String(cells[startCol+10]||'').trim(),
+          blk:  String(cells[startCol+11]||'').trim(),
+          to:   String(cells[startCol+12]||'').trim(),
+          pmStr:  pmfmt(rawPm),
+          pmColor:pmcol(rawPm),
         });
       });
+      return players;
+    }
 
-      if(!players.length) return '';
+    const team1Players = team1Name ? extractTeamPlayers(0) : [];
+    const team2Players = team2Name ? extractTeamPlayers(TEAM_COLS + BLANK_SEP) : [];
+
+    const renderTeam = (name, players) => {
+      if(!name || !players.length) return '';
+      const ts = teamStyle(name) || FALLBACK_STYLES[0];
       return `
-        <tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${tb.teamName}</td></tr>
+        <tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${name}</td></tr>
         ${players.map(pl=>`<tr style="background:${ts.bg}">
           <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(pl.name)}')">${pl.name}</td>
           <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgp}</td>
@@ -1163,14 +1070,16 @@ function buildGamesSection(rows, t) {
           <td>${pl.reb}</td><td>${pl.ast}</td><td>${pl.stl}</td><td>${pl.blk}</td><td>${pl.to}</td>
           <td style="${pl.pmColor}">${pl.pmStr}</td>
         </tr>`).join('')}`;
-    }).filter(Boolean).join('');
+    };
 
+    const teamsHtml = renderTeam(team1Name, team1Players) + renderTeam(team2Name, team2Players);
     if(!teamsHtml) return '';
+
     return `
       <div class="tbl-wrap" style="margin-bottom:12px">
         <div class="tbl-hd" style="background:var(--panel2);display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">${game.title}</span>
-          <span style="font-size:10px;color:var(--chalk-dim);font-weight:400">${game.date}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">${gameTitle}</span>
+          <span style="font-size:10px;color:var(--chalk-dim);font-weight:400">${gameDate}</span>
         </div>
         <div class="tbl-scroll"><table>
           <thead><tr>
@@ -1186,7 +1095,7 @@ function buildGamesSection(rows, t) {
 
   document.getElementById('t-games-section').innerHTML=`
     <div class="sl">Game by Game Stats</div>
-    ${gHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games parsed. Check console for debug info.</div>'}`;
+    ${gHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games found.</div>'}`;
 }
 
 function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
@@ -1220,9 +1129,9 @@ if(localStorage.getItem('abg-theme')==='light'){
 function setMsg(m){document.querySelector('.load-txt').textContent=m;}
 async function loadAll(){
   try {
-    setMsg('Connecting to Google Sheets...');
+    setMsg('Data warming up! Get Ready');
     const avgRows=await fetchSheet(AVG_GID);
-    setMsg('Building player profiles...');
+    setMsg('Loading stats! You are better than Bronny');
     players=avgRows.map(buildPlayer).filter(Boolean);
     if(!players.length)throw new Error('No players loaded. Cols: '+JSON.stringify(Object.keys(avgRows[0]||{})));
     setMsg('Loading tournament data...');
