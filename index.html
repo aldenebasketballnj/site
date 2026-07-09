@@ -135,15 +135,106 @@ body.light-mode nav{background:#F5F3EE;}
 
   <!-- HOME -->
   <div id="page-home" class="view active">
-    <div id="home-hero" style="position:relative;overflow:hidden;background:var(--panel);border-bottom:1px solid var(--border);margin:-22px -14px 28px;padding:60px 20px 50px;text-align:center;">
-      <div style="position:absolute;bottom:-60px;left:50%;transform:translateX(-50%);width:500px;height:350px;border:1.5px solid rgba(200,144,42,0.12);border-radius:50%;pointer-events:none;"></div>
-      <div style="position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:260px;border-left:1.5px solid rgba(200,144,42,0.07);border-right:1.5px solid rgba(200,144,42,0.07);pointer-events:none;"></div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Est. 2018 · Roselle Park, NJ</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(52px,12vw,96px);font-weight:900;line-height:0.9;text-transform:uppercase;margin-bottom:18px;">
-        <div style="color:var(--chalk)">Aldene</div><div style="color:var(--gold)">Basketball</div>
+    <div id="home-hero" style="position:relative;overflow:hidden;margin:-22px -14px 28px;min-height:480px;display:flex;align-items:center;justify-content:center;text-align:center;">
+
+      <!-- Deep dark gradient base -->
+      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#0a0a0b 0%,#0f0f10 40%,#111208 70%,#0a0a0b 100%);"></div>
+
+      <!-- Animated gradient orbs -->
+      <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
+        <!-- Gold orb top left -->
+        <div style="position:absolute;top:-120px;left:-80px;width:420px;height:420px;
+          background:radial-gradient(circle,rgba(200,144,42,0.18) 0%,transparent 70%);
+          animation:orbFloat1 8s ease-in-out infinite;"></div>
+        <!-- Subtle gold orb bottom right -->
+        <div style="position:absolute;bottom:-100px;right:-60px;width:380px;height:380px;
+          background:radial-gradient(circle,rgba(200,144,42,0.12) 0%,transparent 70%);
+          animation:orbFloat2 10s ease-in-out infinite;"></div>
+        <!-- Very faint center glow -->
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;
+          background:radial-gradient(ellipse,rgba(200,144,42,0.06) 0%,transparent 70%);"></div>
       </div>
-      <div style="font-size:15px;color:var(--chalk-mid);letter-spacing:0.04em;">Player Stats · Tournament History · Awards</div>
+
+      <!-- Basketball court SVG lines -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.07;pointer-events:none;" preserveAspectRatio="xMidYMid slice" viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg">
+        <!-- Court outline -->
+        <rect x="40" y="30" width="720" height="420" fill="none" stroke="#C8902A" stroke-width="2"/>
+        <!-- Center line -->
+        <line x1="400" y1="30" x2="400" y2="450" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Center circle -->
+        <circle cx="400" cy="240" r="70" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <circle cx="400" cy="240" r="6" fill="#C8902A"/>
+        <!-- Left key -->
+        <rect x="40" y="155" width="140" height="170" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Left free throw circle -->
+        <path d="M 180 155 A 70 70 0 0 1 180 325" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Left arc (3pt) -->
+        <path d="M 40 130 Q 280 240 40 350" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Right key -->
+        <rect x="620" y="155" width="140" height="170" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Right free throw circle -->
+        <path d="M 620 155 A 70 70 0 0 0 620 325" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Right arc (3pt) -->
+        <path d="M 760 130 Q 520 240 760 350" fill="none" stroke="#C8902A" stroke-width="1.5"/>
+        <!-- Restricted areas -->
+        <path d="M 40 195 A 40 40 0 0 1 40 285" fill="none" stroke="#C8902A" stroke-width="1"/>
+        <path d="M 760 195 A 40 40 0 0 0 760 285" fill="none" stroke="#C8902A" stroke-width="1"/>
+      </svg>
+
+      <!-- Noise texture overlay -->
+      <div style="position:absolute;inset:0;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%220.03%22/></svg>');pointer-events:none;"></div>
+
+      <!-- Bottom fade to black -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,var(--black));pointer-events:none;"></div>
+
+      <!-- Content -->
+      <div style="position:relative;z-index:2;padding:80px 20px 70px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;opacity:0.9;">Est. 2018 · Roselle Park, NJ</div>
+
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(58px,13vw,108px);font-weight:900;line-height:0.85;text-transform:uppercase;letter-spacing:-0.02em;margin-bottom:24px;">
+          <div style="color:#EEEAE2;text-shadow:0 0 80px rgba(200,144,42,0.15);">Aldene</div>
+          <div style="
+            color:var(--gold);
+            text-shadow:0 0 40px rgba(200,144,42,0.4),0 0 80px rgba(200,144,42,0.2);
+            -webkit-text-stroke:0px;
+          ">Basketball</div>
+        </div>
+
+        <!-- Tagline -->
+        <div style="
+          font-family:'Barlow Condensed',sans-serif;
+          font-size:clamp(16px,3vw,22px);
+          font-weight:600;
+          letter-spacing:0.06em;
+          text-transform:uppercase;
+          color:rgba(238,234,226,0.55);
+          margin-bottom:32px;
+        ">Run it back. The numbers don't lie.</div>
+
+        <!-- Stat pills -->
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <div id="hero-pill-pm"   style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid rgba(200,144,42,0.3);color:rgba(200,144,42,0.8);background:rgba(200,144,42,0.07);">+/− Leader: —</div>
+          <div id="hero-pill-ppg"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid rgba(238,234,226,0.12);color:rgba(238,234,226,0.5);background:rgba(238,234,226,0.04);">Top Scorer: —</div>
+          <div id="hero-pill-stl"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid rgba(238,234,226,0.12);color:rgba(238,234,226,0.5);background:rgba(238,234,226,0.04);">Steals Leader: —</div>
+        </div>
+      </div>
     </div>
+
+    <style>
+    @keyframes orbFloat1 {
+      0%,100%{transform:translate(0,0) scale(1);}
+      33%{transform:translate(30px,-20px) scale(1.05);}
+      66%{transform:translate(-15px,25px) scale(0.97);}
+    }
+    @keyframes orbFloat2 {
+      0%,100%{transform:translate(0,0) scale(1);}
+      33%{transform:translate(-25px,15px) scale(1.04);}
+      66%{transform:translate(20px,-20px) scale(0.98);}
+    }
+    body.light-mode #home-hero > div:first-child {
+      background:linear-gradient(160deg,#f0ede8 0%,#ebe8e2 40%,#e8e6df 70%,#f0ede8 100%) !important;
+    }
+    </style>
     <div class="sl">Circuit Leaders</div>
     <div id="hero-grid" class="hero-grid"></div>
   </div>
@@ -403,6 +494,15 @@ function renderHero() {
   ];
   document.getElementById('hero-grid').innerHTML=cards.map(c=>`
     <div class="hcard"><div class="hcard-lbl">${c.lbl}</div><div class="hcard-val">${c.val}</div><div class="hcard-name">${c.name}</div></div>`).join('');
+
+  // Update hero pills
+  const pillPm  = document.getElementById('hero-pill-pm');
+  const pillPpg = document.getElementById('hero-pill-ppg');
+  const pillStl = document.getElementById('hero-pill-stl');
+  if (pillPm)  pillPm.textContent  = '+/− Leader: ' + pm(byPm[0].pm_val) + ' — ' + byPm[0].name;
+  if (pillPpg) pillPpg.textContent = 'Top Scorer: ' + byPpg[0].ppg.toFixed(1) + ' PPG — ' + byPpg[0].name;
+  const bySpg2=[...players].sort((a,b)=>b.spg-a.spg);
+  if (pillStl) pillStl.textContent = 'Steals Leader: ' + bySpg2[0].spg.toFixed(1) + ' SPG — ' + bySpg2[0].name;
 }
 
 // ── ROSTER ──
