@@ -328,7 +328,7 @@ body.light-mode nav{background:#F5F3EE;}
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:sticky;bottom:0;z-index:100;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a>
+      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.1</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
@@ -940,6 +940,7 @@ function buildAvgSection(rows, t) {
   } catch(e) { console.warn('Leaders parse error:', e); }
 
   document.getElementById('t-avg-section').innerHTML=`
+    ${leaderHtml}
     <div class="sl">Tournament Averages</div>
     <div class="tbl-wrap" style="margin-bottom:24px">
       <div class="tbl-hd">Per Game Averages &mdash; Grouped by Team</div>
@@ -951,8 +952,7 @@ function buildAvgSection(rows, t) {
         </tr></thead>
         <tbody>${teamRows||'<tr><td colspan="14" style="padding:16px;color:var(--chalk-dim)">No player data</td></tr>'}</tbody>
       </table></div>
-    </div>
-    ${leaderHtml}`;
+    </div>`;
 }
 
 // ── SECTION 2+: Game by Game ──
@@ -996,7 +996,13 @@ function buildGamesSection(rows, t) {
     }
   }
 
-  console.log('Game col starts:', gameColStarts, 'Title row:', gameTitleRow);
+  console.log('=== GAME DEBUG ===');
+  console.log('Total rows:', rows.length);
+  console.log('Cols in row0:', (rows[0]._cells||[]).length);
+  console.log('Game col starts:', gameColStarts);
+  console.log('Title row:', JSON.stringify(gameTitleRow));
+  // Log first 5 rows fully
+  rows.slice(0,5).forEach((r,i)=>console.log('Row'+i+':', JSON.stringify(r._cells||[])));
 
   function pval(v) {
     if(!v||v==='-'||v==='')return null;
