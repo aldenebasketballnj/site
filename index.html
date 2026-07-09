@@ -734,117 +734,214 @@ function renderTournaments(){
 }
 
 function openTourney(key){
-  const t=TABS[key]; const raw=tourneyData[key]||[];
-  let avgBody='', curStyle=FALLBACK_STYLES[0], fbIdx=0, playerCount=0;
+  const t=TABS[key];
 
-  raw.forEach((r,rowIdx)=>{
-    const rkeys=Object.keys(r); if(!rkeys.length)return;
-    const pos=(i)=>{const k=rkeys[i];return k!==undefined?String(r[k]||'').trim():'';};
-    const name=pos(0); if(!name)return;
-    const nameUp=name.toUpperCase();
-    if(nameUp==='TOTALS'||nameUp==='TOTAL'||nameUp==='GROUP AVERAGE'||nameUp.includes('AVERAGE')||nameUp==='PLAYER')return;
-    if(rowIdx<3)console.log('Tourney row '+rowIdx+':', JSON.stringify(r));
-
-    if(isTeamRow(name)){
-      const ts=teamStyle(name)||FALLBACK_STYLES[fbIdx++%FALLBACK_STYLES.length];
-      curStyle=ts;
-      avgBody+=`<tr><td colspan="15" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:${ts.label};padding:12px 16px;">${name}</td></tr>`;
-    } else {
-      playerCount++;
-      // Cols: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
-      const pf=(i)=>parseFloat(pos(i))||0;
-      const rgp  =pf(1)||1;
-      const rppg =pf(2);
-      const rfgm =pos(3)||'0';
-      const rfgpct=pos(5)||'-';
-      const r3pm =pos(6)||'0';
-      const r3pct=pos(8)||'-';
-      const rrpg =pf(9);
-      const rapg =pf(10);
-      const rspg =pf(11);
-      const rbpg =pf(12);
-      const rtopg=pf(13);
-      const rpm  =n(pos(14));
-      const rw   =pos(15)||'0';
-      const rl   =pos(16)||'0';
-      const rwpct=pos(17)||'-';
-      avgBody+=`<tr style="background:${curStyle.bg}">
-        <td class="tlink" style="text-align:left;padding-left:28px" onclick="goPlayer('${esc(name)}')">${name}</td>
-        <td>${rgp}</td><td class="tg">${rppg.toFixed(1)}</td>
-        <td>${rrpg.toFixed(1)}</td><td>${rapg.toFixed(1)}</td>
-        <td>${rspg.toFixed(1)}</td><td>${rbpg.toFixed(1)}</td>
-        <td>${rfgm}</td><td>${clean(rfgpct)}</td>
-        <td>${r3pm}</td><td>${clean(r3pct)}</td>
-        <td>${rtopg.toFixed(1)}</td>
-        <td>${pm(rpm)}</td>
-        <td>${rw}-${rl}</td><td>${clean(rwpct)}</td>
-      </tr>`;
-    }
-  });
-
-  const avgTable=`<div class="tbl-scroll"><table>
-    <thead><tr>
-      <th style="text-align:left">Player</th><th>GP</th><th>PPG</th><th>RPG</th><th>APG</th>
-      <th>SPG</th><th>BPG</th><th>FGM</th><th>FG%</th><th>3PM</th><th>3P%</th>
-      <th>TOPG</th><th>+/-</th><th>W-L</th><th>WIN%</th>
-    </tr></thead>
-    <tbody>${avgBody||'<tr><td colspan="15" style="padding:20px;color:var(--chalk-dim)">No stats available</td></tr>'}</tbody>
-  </table></div>`;
-
-  document.getElementById('tourney-content').innerHTML=`
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:22px;margin-bottom:18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:-10px;right:-10px;font-family:'Barlow Condensed',sans-serif;font-size:120px;font-weight:900;color:rgba(200,144,42,0.05);line-height:1;pointer-events:none">${playerCount}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(24px,5vw,44px);font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px">${t.label}</div>
-      <div style="font-size:12px;color:var(--chalk-dim)">${t.date} &middot; ${playerCount} Players</div>
-    </div>
-    <div class="sl">Tournament Averages</div>
-    <div class="tbl-wrap" style="margin-bottom:24px"><div class="tbl-hd">Per Game Averages &mdash; Grouped by Team</div>${avgTable}</div>
-    <div class="sl">Game by Game Stats</div>
-    <div id="game-log-section"><div style="padding:20px;text-align:center;color:var(--chalk-dim)"><div class="spin" style="margin:0 auto 12px;width:32px;height:32px;border-width:2px;"></div>Loading games...</div></div>`;
-
-  fetchSheet(t.gameGid).then(gameRows=>{
-    if(!gameRows||!gameRows.length){document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data.</div>';return;}
-    console.log('GAME COLS:', JSON.stringify(Object.keys(gameRows[0])));
-    const allCols=Object.keys(gameRows[0]);
-    const gameCols=allCols.filter(c=>c.toUpperCase().includes('GAME'));
-    if(!gameCols.length){document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game columns found. Cols: '+JSON.stringify(allCols.slice(0,6))+'</div>';return;}
-    const html=gameCols.map((gameCol,gi)=>{
-      const colIdx=allCols.indexOf(gameCol);
-      const teams=[]; let curTeam=null,curTs=FALLBACK_STYLES[0],fbi=0;
-      gameRows.forEach(row=>{
-        const cellName=String(row[gameCol]||'').trim(); if(!cellName)return;
-        const upper=cellName.toUpperCase();
-        if(upper.includes('GAME')||upper==='TOTALS'||upper==='TOTAL'||upper.endsWith('TOTALS:'))return;
-        if(isTeamRow(cellName)){curTs=teamStyle(cellName)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];curTeam={name:cellName,style:curTs,players:[]};teams.push(curTeam);return;}
-        if(!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
-        const p=(off)=>{const c=allCols[colIdx+off];return c?clean(String(row[c]||'').trim()):'-';};
-        curTeam.players.push({name:cellName,fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),tpm:p(5),tpa:p(6),tpct:p(7),reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:n(p(13))});
-      });
-      const teamsHtml=teams.map(team=>{
-        const ts=team.style;
-        return `<tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 16px;">${team.name}</td></tr>`+
-          team.players.map(pl=>`<tr style="background:${ts.bg}">
-            <td class="tlink" style="text-align:left;padding-left:24px" onclick="goPlayer('${esc(pl.name)}')">${pl.name}</td>
-            <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgpct}</td><td class="tg">${pl.pts}</td>
-            <td>${pl.tpm}/${pl.tpa}</td><td>${pl.tpct}</td>
-            <td>${pl.reb}</td><td>${pl.ast}</td><td>${pl.stl}</td><td>${pl.blk}</td><td>${pl.to}</td>
-            <td class="${pmc(pl.pm)}">${pm(pl.pm)}</td>
-          </tr>`).join('');
-      }).join('');
-      return `<div class="tbl-wrap" style="margin-bottom:10px">
-        <div class="tbl-hd" style="background:var(--panel2)">${gameCol}</div>
-        <div class="tbl-scroll"><table>
-          <thead><tr><th style="text-align:left">Player</th><th>FGM/A</th><th>FG%</th><th>PTS</th><th>3PM/A</th><th>3P%</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/-</th></tr></thead>
-          <tbody>${teamsHtml}</tbody>
-        </table></div>
-      </div>`;
-    }).join('');
-    document.getElementById('game-log-section').innerHTML=html||'<div style="padding:16px;color:var(--chalk-dim)">No games found.</div>';
-  }).catch(e=>{document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">Could not load: '+e.message+'</div>';});
-
+  // Show shell immediately
   document.getElementById('tournaments-list').style.display='none';
   document.getElementById('tournament-detail').style.display='block';
   window.scrollTo(0,0);
+
+  document.getElementById('tourney-content').innerHTML=`
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:22px;margin-bottom:18px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(24px,5vw,44px);font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px">${t.label}</div>
+      <div style="font-size:12px;color:var(--chalk-dim)">${t.date}</div>
+    </div>
+    <div id="t-avg-section"><div style="padding:20px;text-align:center;color:var(--chalk-dim)"><div class="spin" style="margin:0 auto 10px;width:28px;height:28px;border-width:2px"></div>Loading averages...</div></div>
+    <div id="t-games-section"><div style="padding:20px;text-align:center;color:var(--chalk-dim)"><div class="spin" style="margin:0 auto 10px;width:28px;height:28px;border-width:2px"></div>Loading games...</div></div>
+  `;
+
+  // Load both in parallel
+  Promise.all([
+    fetchSheet(t.statsGid).catch(()=>[]),
+    fetchSheet(t.gameGid).catch(()=>[])
+  ]).then(([statsRows, gameRows]) => {
+    buildAvgSection(statsRows, t);
+    buildGamesSection(gameRows, t);
+  });
+}
+
+// ── SECTION 1: Tournament Averages ──
+function buildAvgSection(rows, t) {
+  if(!rows.length){ document.getElementById('t-avg-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No averages data.</div>'; return; }
+
+  console.log('AVG cols:', JSON.stringify(Object.keys(rows[0])));
+  console.log('AVG row0:', JSON.stringify(rows[0]));
+  console.log('AVG row1:', JSON.stringify(rows[1]||{}));
+
+  let teamSections='';
+  let curStyle=FALLBACK_STYLES[0], fbIdx=0;
+
+  rows.forEach((r,ri)=>{
+    const rkeys=Object.keys(r);
+    const pos=(i)=>String(r[rkeys[i]]||'').trim();
+    const name=pos(0); if(!name)return;
+    const up=name.toUpperCase();
+    if(up==='PLAYER'||up==='NAME')return;
+
+    // Team header
+    if(isTeamRow(name)){
+      if(up==='TOTALS'||up==='TOTAL'||up.endsWith('TOTALS:'))return;
+      const ts=teamStyle(name)||FALLBACK_STYLES[fbIdx++%FALLBACK_STYLES.length];
+      curStyle=ts;
+      teamSections+=`<tr><td colspan="14" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:11px 14px;">${name}</td></tr>`;
+      return;
+    }
+
+    // Totals row - styled differently
+    if(up==='TOTALS'||up==='TOTAL'){
+      const pf=(i)=>pos(i)||'-';
+      teamSections+=`<tr style="background:${curStyle.bg};opacity:0.6;font-style:italic;">
+        <td style="text-align:left;padding-left:14px;font-size:11px;color:var(--chalk-dim)">Totals</td>
+        ${[1,2,3,4,5,6,7,8,9,10,11,12,13].map(i=>`<td style="font-size:11px;color:var(--chalk-dim)">${clean(pf(i))}</td>`).join('')}
+      </tr>`;
+      return;
+    }
+
+    // Player row
+    // Cols: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
+    const pf=(i)=>parseFloat(pos(i))||0;
+    const rgp  =pf(1)||1;
+    const rppg =pf(2); const rfgm=pos(3); const rfga=pos(4); const rfgp=pos(5);
+    const r3pm =pos(6); const r3pa=pos(7); const r3p=pos(8);
+    const rrpg =pf(9);  const rapg=pf(10); const rspg=pf(11);
+    const rbpg =pf(12); const rtopg=pf(13);
+    const rpm  =n(pos(14));
+    teamSections+=`<tr style="background:${curStyle.bg}">
+      <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(name)}')">${name}</td>
+      <td>${rgp}</td>
+      <td class="tg">${rppg.toFixed(1)}</td>
+      <td>${rrpg.toFixed(1)}</td>
+      <td>${rapg.toFixed(1)}</td>
+      <td>${rspg.toFixed(1)}</td>
+      <td>${rbpg.toFixed(1)}</td>
+      <td>${rtopg.toFixed(1)}</td>
+      <td class="${pmc(rpm)}">${pm(rpm)}</td>
+      <td>${clean(rfgm)}</td>
+      <td>${clean(rfga)}</td>
+      <td>${clean(rfgp)}</td>
+      <td>${clean(r3pm)}</td>
+      <td>${clean(r3p)}</td>
+    </tr>`;
+  });
+
+  document.getElementById('t-avg-section').innerHTML=`
+    <div class="sl">Tournament Averages</div>
+    <div class="tbl-wrap" style="margin-bottom:24px">
+      <div class="tbl-hd">Per Game Averages &mdash; Grouped by Team</div>
+      <div class="tbl-scroll"><table>
+        <thead><tr>
+          <th style="text-align:left">Player</th>
+          <th>GP</th><th>PPG</th><th>RPG</th><th>APG</th><th>SPG</th><th>BPG</th><th>TOPG</th>
+          <th>+/-</th><th>FGM</th><th>FGA</th><th>FG%</th><th>3PM</th><th>3FG%</th>
+        </tr></thead>
+        <tbody>${teamSections||'<tr><td colspan="14" style="padding:16px;color:var(--chalk-dim)">No player data found</td></tr>'}</tbody>
+      </table></div>
+    </div>`;
+}
+
+// ── SECTION 2+: Game by Game ──
+function buildGamesSection(rows, t) {
+  if(!rows.length){ document.getElementById('t-games-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data.</div>'; return; }
+
+  console.log('GAME cols:', JSON.stringify(Object.keys(rows[0])));
+  console.log('GAME row0:', JSON.stringify(rows[0]));
+  console.log('GAME row1:', JSON.stringify(rows[1]||{}));
+  console.log('GAME row2:', JSON.stringify(rows[2]||{}));
+
+  const allCols=Object.keys(rows[0]);
+
+  // Find all game title columns (contain "GAME")
+  const gameCols=allCols.filter(c=>c.toUpperCase().includes('GAME'));
+  if(!gameCols.length){
+    document.getElementById('t-games-section').innerHTML=`<div style="padding:16px;color:var(--chalk-dim)">No game columns found. Cols: ${JSON.stringify(allCols.slice(0,8))}</div>`;
+    return;
+  }
+
+  // Each game column: col[gameIdx+0]=PlayerName, col[gameIdx+1]=FGM, [+2]=FGA, [+3]=FG%,
+  // [+4]=PTS, [+5]=3PM, [+6]=3PA, [+7]=3P%, [+8]=REBS, [+9]=AST, [+10]=STL, [+11]=BLK, [+12]=TO, [+13]=+/-
+  const gamesHtml = gameCols.map((gameCol, gi)=>{
+    const colIdx = allCols.indexOf(gameCol);
+
+    // Extract date from column header e.g. "GAME 1- 7/5/2026"
+    const titleParts = gameCol.split('-').map(s=>s.trim());
+    const gameNum  = titleParts[0] || gameCol;  // "GAME 1"
+    const gameDate = titleParts[1] || t.date;   // "7/5/2026"
+
+    const teams=[]; let curTeam=null, curTs=FALLBACK_STYLES[0], fbi=0;
+
+    rows.forEach(row=>{
+      const cellVal=String(row[gameCol]||'').trim();
+      if(!cellVal)return;
+      const up=cellVal.toUpperCase();
+
+      // Skip game title rows
+      if(up.includes('GAME'))return;
+      // Skip totals
+      if(up==='TOTALS'||up==='TOTAL'||up.endsWith('TOTALS:'))return;
+
+      // Team header
+      if(isTeamRow(cellVal)){
+        curTs=teamStyle(cellVal)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
+        curTeam={name:cellVal, style:curTs, players:[]};
+        teams.push(curTeam);
+        return;
+      }
+
+      if(!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
+
+      // Get stats at offset positions
+      const p=(off)=>{
+        const c=allCols[colIdx+off];
+        return c ? clean(String(row[c]||'').trim()) : '-';
+      };
+
+      curTeam.players.push({
+        name: cellVal,
+        fgm:p(1), fga:p(2), fgp:p(3),
+        pts:p(4),
+        t3m:p(5), t3a:p(6), t3p:p(7),
+        reb:p(8), ast:p(9), stl:p(10), blk:p(11), to:p(12),
+        pm: n(p(13))
+      });
+    });
+
+    if(!teams.length)return '';
+
+    const teamsHtml = teams.map(team=>{
+      const ts=team.style;
+      return `
+        <tr><td colspan="13" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${team.name}</td></tr>
+        ${team.players.map(pl=>`<tr style="background:${ts.bg}">
+          <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(pl.name)}')">${pl.name}</td>
+          <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgp}</td>
+          <td class="tg">${pl.pts}</td>
+          <td>${pl.t3m}/${pl.t3a}</td><td>${pl.t3p}</td>
+          <td>${pl.reb}</td><td>${pl.ast}</td><td>${pl.stl}</td><td>${pl.blk}</td><td>${pl.to}</td>
+          <td class="${pmc(pl.pm)}">${pm(pl.pm)}</td>
+        </tr>`).join('')}`;
+    }).join('');
+
+    return `
+      <div class="tbl-wrap" style="margin-bottom:10px">
+        <div class="tbl-hd" style="background:var(--panel2);display:flex;justify-content:space-between;align-items:center;">
+          <span>${gameNum}</span>
+          <span style="font-size:10px;color:var(--chalk-dim);font-weight:400;">${gameDate}</span>
+        </div>
+        <div class="tbl-scroll"><table>
+          <thead><tr>
+            <th style="text-align:left">Player</th>
+            <th>FGM/A</th><th>FG%</th><th>PTS</th>
+            <th>3PM/A</th><th>3P%</th>
+            <th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/-</th>
+          </tr></thead>
+          <tbody>${teamsHtml}</tbody>
+        </table></div>
+      </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('t-games-section').innerHTML=`
+    <div class="sl">Game by Game Stats</div>
+    ${gamesHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games parsed.</div>'}`;
 }
 function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
 
