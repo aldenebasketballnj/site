@@ -17,12 +17,26 @@
 html{scroll-behavior:smooth;}
 body{background:var(--black);color:var(--chalk);font-family:'Barlow',sans-serif;min-height:100vh;}
 
+/* LOADING */
 #loading-screen{position:fixed;inset:0;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity 0.5s;}
 #loading-screen.fade{opacity:0;pointer-events:none;}
 .spin{width:44px;height:44px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--gold);animation:spin 0.8s linear infinite;margin-bottom:16px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-txt{font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:var(--chalk-mid);text-align:center;padding:0 20px;}
 
+/* HERO - always dark */
+#home-hero{position:relative;overflow:hidden;margin:-22px -14px 28px;min-height:480px;display:flex;align-items:center;justify-content:center;text-align:center;}
+#home-hero .hero-bg-base{position:absolute;inset:0;background:linear-gradient(160deg,#0a0a0b 0%,#0f0f10 40%,#111208 70%,#0a0a0b 100%);}
+body.light-mode #home-hero .hero-bg-base{background:linear-gradient(160deg,#111113 0%,#141410 40%,#111113 70%,#0d0d0f 100%);}
+.hero-orb1{position:absolute;top:-120px;left:-80px;width:420px;height:420px;background:radial-gradient(circle,rgba(200,144,42,0.18) 0%,transparent 70%);animation:orbFloat1 8s ease-in-out infinite;pointer-events:none;}
+.hero-orb2{position:absolute;bottom:-100px;right:-60px;width:380px;height:380px;background:radial-gradient(circle,rgba(200,144,42,0.12) 0%,transparent 70%);animation:orbFloat2 10s ease-in-out infinite;pointer-events:none;}
+.hero-center-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(200,144,42,0.06) 0%,transparent 70%);pointer-events:none;}
+.hero-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:140px;background:linear-gradient(to bottom,transparent,var(--black));pointer-events:none;}
+body.light-mode .hero-fade-bottom{background:linear-gradient(to bottom,transparent,var(--black));}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-20px) scale(1.05);}66%{transform:translate(-15px,25px) scale(0.97);}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(-25px,15px) scale(1.04);}66%{transform:translate(20px,-20px) scale(0.98);}}
+
+/* HEADER */
 header{background:var(--panel);border-bottom:1px solid var(--border);padding:0 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:54px;}
 .logo{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;cursor:pointer;display:flex;align-items:center;gap:8px;}
 .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);}
@@ -30,6 +44,7 @@ header{background:var(--panel);border-bottom:1px solid var(--border);padding:0 2
 .header-sub{font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;}
 @media(max-width:480px){.header-sub{display:none;}}
 
+/* NAV */
 nav{background:var(--black);border-bottom:1px solid var(--border);display:flex;padding:0 14px;overflow-x:auto;scrollbar-width:none;}
 nav::-webkit-scrollbar{display:none;}
 .tab{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:13px 16px;border:none;background:transparent;color:var(--chalk-dim);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;}
@@ -40,10 +55,9 @@ main{max-width:1140px;margin:0 auto;padding:22px 14px 80px;}
 
 .sl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:13px;display:flex;align-items:center;gap:10px;}
 .sl::after{content:'';flex:1;height:1px;background:var(--border);}
-
 .err{background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.3);border-radius:8px;padding:16px 18px;font-size:13px;color:#e74c3c;margin-bottom:18px;display:none;line-height:1.6;}
 
-/* HERO */
+/* HERO CARDS */
 .hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:32px;}
 .hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;}
 .hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}
@@ -62,7 +76,7 @@ main{max-width:1140px;margin:0 auto;padding:22px 14px 80px;}
 .ms{text-align:center;}
 .ms-v{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;display:block;line-height:1;}
 .ms-l{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--chalk-dim);display:block;margin-top:2px;}
-.pos{color:var(--green)!important;} .neg{color:var(--red)!important;} .gld{color:var(--gold-light)!important;}
+.pos{color:var(--green)!important;}.neg{color:var(--red)!important;}.gld{color:var(--gold-light)!important;}
 
 /* PROFILE */
 .back-btn{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);background:none;border:none;cursor:pointer;margin-bottom:18px;padding:0;}
@@ -88,15 +102,14 @@ tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:rgba(200,144,42,0.04);}
 tbody td{padding:9px 11px;text-align:right;color:var(--chalk-dim);font-variant-numeric:tabular-nums;white-space:nowrap;}
 tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:14px;}
-.tp{color:var(--green)!important;font-weight:700;} .tn{color:var(--red)!important;font-weight:700;} .tg{color:var(--gold-light)!important;font-weight:700;}
-.tlink{cursor:pointer;} .tlink:hover{color:var(--gold-light)!important;}
+.tp{color:var(--green)!important;font-weight:700;}.tn{color:var(--red)!important;font-weight:700;}.tg{color:var(--gold-light)!important;font-weight:700;}
+.tlink{cursor:pointer;}.tlink:hover{color:var(--gold-light)!important;}
 .lrank{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:16px;color:var(--chalk-dim);}
 .sort-th{cursor:pointer;user-select:none;transition:color 0.15s;}
 .sort-th:hover{color:var(--gold-light)!important;}
 .sort-th.active-sort{color:var(--gold-light)!important;background:rgba(200,144,42,0.08);}
-.col-highlight{background:rgba(200,144,42,0.06)!important;}
 
-/* TOURNEY */
+/* TOURNEY CARDS */
 .tourney-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:11px;margin-bottom:26px;}
 .tcard{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all 0.18s;}
 .tcard:hover{border-color:var(--gold);transform:translateY(-2px);}
@@ -108,7 +121,7 @@ body.light-mode{--black:#F5F3EE;--panel:#FFFFFF;--panel2:#F0EDE8;--border:#DDD9D
 body.light-mode header,body.light-mode #site-footer{background:#FFFFFF;}
 body.light-mode nav{background:#F5F3EE;}
 
-.view{display:none;} .view.active{display:block;}
+.view{display:none;}.view.active{display:block;}
 </style>
 </head>
 <body>
@@ -120,7 +133,7 @@ body.light-mode nav{background:#F5F3EE;}
 
 <header>
   <div class="logo" onclick="showPage('home')"><div class="logo-dot"></div>Aldene <span>Basketball</span></div>
-  <div class="header-sub">Est. 2018 · Roselle Park, NJ</div>
+  <div class="header-sub">Est. 2018 &middot; Roselle Park, NJ</div>
 </header>
 
 <nav>
@@ -135,106 +148,48 @@ body.light-mode nav{background:#F5F3EE;}
 
   <!-- HOME -->
   <div id="page-home" class="view active">
-    <div id="home-hero" style="position:relative;overflow:hidden;margin:-22px -14px 28px;min-height:480px;display:flex;align-items:center;justify-content:center;text-align:center;">
 
-      <!-- Deep dark gradient base -->
-      <div style="position:absolute;inset:0;background:linear-gradient(160deg,#0a0a0b 0%,#0f0f10 40%,#111208 70%,#0a0a0b 100%);"></div>
+    <!-- HERO - always dark regardless of light mode -->
+    <div id="home-hero">
+      <div class="hero-bg-base"></div>
+      <div class="hero-orb1"></div>
+      <div class="hero-orb2"></div>
+      <div class="hero-center-glow"></div>
 
-      <!-- Animated gradient orbs -->
-      <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
-        <!-- Gold orb top left -->
-        <div style="position:absolute;top:-120px;left:-80px;width:420px;height:420px;
-          background:radial-gradient(circle,rgba(200,144,42,0.18) 0%,transparent 70%);
-          animation:orbFloat1 8s ease-in-out infinite;"></div>
-        <!-- Subtle gold orb bottom right -->
-        <div style="position:absolute;bottom:-100px;right:-60px;width:380px;height:380px;
-          background:radial-gradient(circle,rgba(200,144,42,0.12) 0%,transparent 70%);
-          animation:orbFloat2 10s ease-in-out infinite;"></div>
-        <!-- Very faint center glow -->
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;
-          background:radial-gradient(ellipse,rgba(200,144,42,0.06) 0%,transparent 70%);"></div>
-      </div>
-
-      <!-- Basketball court SVG lines -->
+      <!-- Basketball court SVG -->
       <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.07;pointer-events:none;" preserveAspectRatio="xMidYMid slice" viewBox="0 0 800 480" xmlns="http://www.w3.org/2000/svg">
-        <!-- Court outline -->
         <rect x="40" y="30" width="720" height="420" fill="none" stroke="#C8902A" stroke-width="2"/>
-        <!-- Center line -->
         <line x1="400" y1="30" x2="400" y2="450" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Center circle -->
         <circle cx="400" cy="240" r="70" fill="none" stroke="#C8902A" stroke-width="1.5"/>
         <circle cx="400" cy="240" r="6" fill="#C8902A"/>
-        <!-- Left key -->
         <rect x="40" y="155" width="140" height="170" fill="none" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Left free throw circle -->
         <path d="M 180 155 A 70 70 0 0 1 180 325" fill="none" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Left arc (3pt) -->
         <path d="M 40 130 Q 280 240 40 350" fill="none" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Right key -->
         <rect x="620" y="155" width="140" height="170" fill="none" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Right free throw circle -->
         <path d="M 620 155 A 70 70 0 0 0 620 325" fill="none" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Right arc (3pt) -->
         <path d="M 760 130 Q 520 240 760 350" fill="none" stroke="#C8902A" stroke-width="1.5"/>
-        <!-- Restricted areas -->
-        <path d="M 40 195 A 40 40 0 0 1 40 285" fill="none" stroke="#C8902A" stroke-width="1"/>
-        <path d="M 760 195 A 40 40 0 0 0 760 285" fill="none" stroke="#C8902A" stroke-width="1"/>
       </svg>
 
-      <!-- Noise texture overlay -->
-      <div style="position:absolute;inset:0;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/></filter><rect width=%22200%22 height=%22200%22 filter=%22url(%23n)%22 opacity=%220.03%22/></svg>');pointer-events:none;"></div>
-
-      <!-- Bottom fade to black -->
-      <div style="position:absolute;bottom:0;left:0;right:0;height:120px;background:linear-gradient(to bottom,transparent,var(--black));pointer-events:none;"></div>
+      <div class="hero-fade-bottom"></div>
 
       <!-- Content -->
-      <div style="position:relative;z-index:2;padding:80px 20px 70px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;opacity:0.9;">Est. 2018 · Roselle Park, NJ</div>
-
+      <div style="position:relative;z-index:2;padding:80px 20px 70px;width:100%;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;">Est. 2018 &middot; Roselle Park, NJ</div>
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(58px,13vw,108px);font-weight:900;line-height:0.85;text-transform:uppercase;letter-spacing:-0.02em;margin-bottom:24px;">
           <div style="color:#EEEAE2;text-shadow:0 0 80px rgba(200,144,42,0.15);">Aldene</div>
-          <div style="
-            color:var(--gold);
-            text-shadow:0 0 40px rgba(200,144,42,0.4),0 0 80px rgba(200,144,42,0.2);
-            -webkit-text-stroke:0px;
-          ">Basketball</div>
+          <div style="color:var(--gold);text-shadow:0 0 40px rgba(200,144,42,0.4),0 0 80px rgba(200,144,42,0.2);">Basketball</div>
         </div>
-
-        <!-- Tagline -->
-        <div style="
-          font-family:'Barlow Condensed',sans-serif;
-          font-size:clamp(16px,3vw,22px);
-          font-weight:600;
-          letter-spacing:0.06em;
-          text-transform:uppercase;
-          color:rgba(238,234,226,0.55);
-          margin-bottom:32px;
-        ">Run it back. The numbers don't lie.</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(15px,3vw,21px);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(238,234,226,0.5);margin-bottom:36px;">Run it back. The numbers don&apos;t lie.</div>
 
         <!-- Stat pills -->
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <div id="hero-pill-pm"   style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid rgba(200,144,42,0.3);color:rgba(200,144,42,0.8);background:rgba(200,144,42,0.07);">+/− Leader: —</div>
-          <div id="hero-pill-ppg"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid rgba(238,234,226,0.12);color:rgba(238,234,226,0.5);background:rgba(238,234,226,0.04);">Top Scorer: —</div>
-          <div id="hero-pill-stl"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:7px 16px;border-radius:20px;border:1px solid rgba(238,234,226,0.12);color:rgba(238,234,226,0.5);background:rgba(238,234,226,0.04);">Steals Leader: —</div>
+          <div id="hero-pill-ppg"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border-radius:20px;border:1px solid rgba(200,144,42,0.35);color:rgba(232,172,74,0.95);background:rgba(200,144,42,0.1);">Top Scorer: --</div>
+          <div id="hero-pill-wins" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border-radius:20px;border:1px solid rgba(238,234,226,0.15);color:rgba(238,234,226,0.65);background:rgba(238,234,226,0.05);">Wins Leader: --</div>
+          <div id="hero-pill-mvp"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border-radius:20px;border:1px solid rgba(238,234,226,0.15);color:rgba(238,234,226,0.65);background:rgba(238,234,226,0.05);">MVP: --</div>
         </div>
       </div>
     </div>
 
-    <style>
-    @keyframes orbFloat1 {
-      0%,100%{transform:translate(0,0) scale(1);}
-      33%{transform:translate(30px,-20px) scale(1.05);}
-      66%{transform:translate(-15px,25px) scale(0.97);}
-    }
-    @keyframes orbFloat2 {
-      0%,100%{transform:translate(0,0) scale(1);}
-      33%{transform:translate(-25px,15px) scale(1.04);}
-      66%{transform:translate(20px,-20px) scale(0.98);}
-    }
-    body.light-mode #home-hero > div:first-child {
-      background:linear-gradient(160deg,#f0ede8 0%,#ebe8e2 40%,#e8e6df 70%,#f0ede8 100%) !important;
-    }
-    </style>
     <div class="sl">Circuit Leaders</div>
     <div id="hero-grid" class="hero-grid"></div>
   </div>
@@ -252,7 +207,7 @@ body.light-mode nav{background:#F5F3EE;}
       <div id="no-results" style="display:none;text-align:center;padding:40px;color:var(--chalk-dim);font-family:'Barlow Condensed',sans-serif;font-size:18px;letter-spacing:0.1em;">NO PLAYERS FOUND</div>
     </div>
     <div id="player-profile" style="display:none;">
-      <button class="back-btn" onclick="closeProfile()">← All Players</button>
+      <button class="back-btn" onclick="closeProfile()">Back to Players</button>
       <div id="profile-content"></div>
     </div>
   </div>
@@ -262,29 +217,29 @@ body.light-mode nav{background:#F5F3EE;}
     <div class="sl">Full Leaderboard</div>
     <div class="tbl-wrap">
       <div class="tbl-hd" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>All Players — Click any column to sort</span>
-        <span style="font-size:10px;color:var(--chalk-dim);font-weight:400;">↕ sortable</span>
+        <span>All Players &mdash; Click any column to sort</span>
+        <span style="font-size:10px;color:var(--chalk-dim);font-weight:400;">sortable</span>
       </div>
       <div class="tbl-scroll">
         <table id="lb-table">
           <thead><tr id="lb-header">
-            <th class="sort-th" data-col="rank" data-label="#" style="text-align:left;width:28px;">#</th>
-            <th class="sort-th" data-col="name" data-label="Player" style="text-align:left;">Player</th>
-            <th class="sort-th" data-col="gp" data-label="GP">GP</th>
-            <th class="sort-th" data-col="w" data-label="W">W</th>
-            <th class="sort-th" data-col="l" data-label="L">L</th>
-            <th class="sort-th" data-col="winPct" data-label="WIN%">WIN%</th>
-            <th class="sort-th" data-col="ppg" data-label="PPG">PPG</th>
-            <th class="sort-th" data-col="rpg" data-label="RPG">RPG</th>
-            <th class="sort-th" data-col="apg" data-label="APG">APG</th>
-            <th class="sort-th" data-col="spg" data-label="SPG">SPG</th>
-            <th class="sort-th" data-col="bpg" data-label="BPG">BPG</th>
-            <th class="sort-th" data-col="fgm" data-label="FGM">FGM</th>
-            <th class="sort-th" data-col="fgPct" data-label="FG%">FG%</th>
-            <th class="sort-th" data-col="threePm" data-label="3PM">3PM</th>
+            <th class="sort-th" data-col="rank"     data-label="#"     style="text-align:left;width:28px;">#</th>
+            <th class="sort-th" data-col="name"     data-label="Player" style="text-align:left;">Player</th>
+            <th class="sort-th" data-col="gp"       data-label="GP">GP</th>
+            <th class="sort-th" data-col="w"        data-label="W">W</th>
+            <th class="sort-th" data-col="l"        data-label="L">L</th>
+            <th class="sort-th" data-col="winPct"   data-label="WIN%">WIN%</th>
+            <th class="sort-th" data-col="ppg"      data-label="PPG">PPG</th>
+            <th class="sort-th" data-col="rpg"      data-label="RPG">RPG</th>
+            <th class="sort-th" data-col="apg"      data-label="APG">APG</th>
+            <th class="sort-th" data-col="spg"      data-label="SPG">SPG</th>
+            <th class="sort-th" data-col="bpg"      data-label="BPG">BPG</th>
+            <th class="sort-th" data-col="fgm"      data-label="FGM">FGM</th>
+            <th class="sort-th" data-col="fgPct"    data-label="FG%">FG%</th>
+            <th class="sort-th" data-col="threePm"  data-label="3PM">3PM</th>
             <th class="sort-th" data-col="threePct" data-label="3P%">3P%</th>
-            <th class="sort-th" data-col="topg" data-label="TOPG">TOPG</th>
-            <th class="sort-th" data-col="pm" data-label="+/−">+/−</th>
+            <th class="sort-th" data-col="topg"     data-label="TOPG">TOPG</th>
+            <th class="sort-th" data-col="pm"       data-label="+/-">+/-</th>
           </tr></thead>
           <tbody id="lb-body"></tbody>
         </table>
@@ -299,13 +254,13 @@ body.light-mode nav{background:#F5F3EE;}
       <div id="tourney-grid" class="tourney-grid"></div>
     </div>
     <div id="tournament-detail" style="display:none;">
-      <button class="back-btn" onclick="closeTourney()">← Tournaments</button>
+      <button class="back-btn" onclick="closeTourney()">Back to Tournaments</button>
       <div id="tourney-content"></div>
     </div>
   </div>
 </main>
 
-<footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:20px;margin-top:40px;text-align:center;">
+<footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:20px;margin-top:40px;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
       Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a>
@@ -320,7 +275,7 @@ body.light-mode nav{background:#F5F3EE;}
 </footer>
 
 <script>
-// ── CONFIG ──
+// CONFIG
 const SHEET_ID = '1Qry6hXLIQiKC60h0NZgeaSKRgRdvXNlwsiUzuaNibQI';
 const PUB_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR68Vhawf_2ReKG-4Hb4shvH4Ug9mFSgx58Re0WbgFY9qPv3MuVoiwT4847feFrXCVOtw79hMxpMiZ9/pub';
 const AVG_GID  = '89256538';
@@ -335,35 +290,20 @@ const TABS = {
 };
 const gameLogCache = {};
 
-// ── FETCH ──
+// FETCH
 async function fetchSheet(gid) {
   const url = PUB_BASE + '?output=csv&gid=' + gid;
-  // Try direct first
   try {
     const r = await fetch(url, { mode:'cors' });
-    if (r.ok) {
-      const t = await r.text();
-      if (t && t.length > 10 && !t.trim().startsWith('<')) {
-        console.log('Direct fetch OK gid=' + gid);
-        return csvToObjects(t);
-      }
-    }
+    if (r.ok) { const t = await r.text(); if (t && t.length > 10 && !t.trim().startsWith('<')) { console.log('Direct OK gid=' + gid); return csvToObjects(t); } }
   } catch(e) { console.warn('Direct failed:', e.message); }
-  // corsproxy fallback
   try {
     const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-    if (r.ok) {
-      const t = await r.text();
-      if (t && t.length > 10 && !t.trim().startsWith('<')) {
-        console.log('corsproxy OK gid=' + gid);
-        return csvToObjects(t);
-      }
-    }
-  } catch(e) { console.warn('corsproxy failed:', e.message); }
-  throw new Error('All fetch methods failed for gid=' + gid + '. Direct and corsproxy both failed.');
+    if (r.ok) { const t = await r.text(); if (t && t.length > 10 && !t.trim().startsWith('<')) { console.log('Proxy OK gid=' + gid); return csvToObjects(t); } }
+  } catch(e) { console.warn('Proxy failed:', e.message); }
+  throw new Error('All fetch methods failed for gid=' + gid);
 }
 
-// ── CSV PARSER ──
 function csvToObjects(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
@@ -379,44 +319,44 @@ function parseCSVLine(line) {
   const cells=[]; let cur=''; let inQ=false;
   for (let i=0;i<line.length;i++) {
     const c=line[i];
-    if (c==='"') { inQ=!inQ; }
-    else if (c===','&&!inQ) { cells.push(cur); cur=''; }
+    if (c==='"'){inQ=!inQ;}
+    else if (c===','&&!inQ){cells.push(cur);cur='';}
     else cur+=c;
   }
   cells.push(cur);
   return cells;
 }
 
-// ── HELPERS ──
-function n(v) { if (!v||v==='#DIV/0!'||v==='-'||v==='N/A'||v==='') return 0; return parseFloat(String(v).replace('%','').replace('+',''))||0; }
+// HELPERS
+function n(v) { if(!v||v==='#DIV/0!'||v==='-'||v==='N/A'||v==='')return 0; return parseFloat(String(v).replace('%','').replace('+',''))||0; }
 function pm(v) { const f=n(v); return (f>0?'+':'')+f; }
 function pmc(v) { const f=n(v); return f>0?'tp':f<0?'tn':''; }
 function perG(tot,gp) { return gp>0?(tot/gp).toFixed(1):'0.0'; }
 function esc(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-function g(row,...keys) { for (const k of keys) { if (row[k]!==undefined&&row[k]!=='') return row[k]; } return ''; }
+function g(row,...keys) { for(const k of keys){if(row[k]!==undefined&&row[k]!=='')return row[k];} return ''; }
 function sg(row,...keys) {
   const ak=Object.keys(row);
-  for (const k of keys) {
-    if (row[k]!==undefined&&String(row[k]).trim()!=='') return String(row[k]).trim();
+  for(const k of keys){
+    if(row[k]!==undefined&&String(row[k]).trim()!=='')return String(row[k]).trim();
     const f=ak.find(x=>x.toLowerCase().trim()===k.toLowerCase().trim());
-    if (f&&String(row[f]).trim()!=='') return String(row[f]).trim();
+    if(f&&String(row[f]).trim()!=='')return String(row[f]).trim();
   }
   return '';
 }
-function clean(v) { return (!v||v==='#DIV/0!'||v==='') ? '-' : v; }
+function clean(v){return(!v||v==='#DIV/0!'||v==='')? '-':v;}
 
-// ── TEAM STYLES ──
+// TEAM STYLES
 const TEAM_STYLES = {
-  'TEAM BLACK': { bg:'rgba(255,255,255,0.05)', border:'2px solid rgba(255,255,255,0.2)',  label:'#E0DCD4' },
-  'TEAM BLUE':  { bg:'rgba(42,109,220,0.10)',  border:'2px solid rgba(42,109,220,0.4)',   label:'#6EA8FF' },
-  'TEAM WHITE': { bg:'rgba(220,216,208,0.07)', border:'2px solid rgba(220,216,208,0.25)', label:'#C8C4BC' },
-  'TEAM 1':     { bg:'rgba(200,144,42,0.08)',  border:'2px solid rgba(200,144,42,0.35)',  label:'var(--gold-light)' },
-  'TEAM 2':     { bg:'rgba(42,109,220,0.10)',  border:'2px solid rgba(42,109,220,0.4)',   label:'#6EA8FF' },
-  'TEAM 3':     { bg:'rgba(42,157,92,0.09)',   border:'2px solid rgba(42,157,92,0.35)',   label:'#4ec98a' },
-  'TEAM 4':     { bg:'rgba(192,57,43,0.08)',   border:'2px solid rgba(192,57,43,0.35)',   label:'#e07060' },
-  'GLADIATORS': { bg:'rgba(200,144,42,0.09)',  border:'2px solid rgba(200,144,42,0.35)',  label:'var(--gold-light)' },
-  'NUTCRACKERS':{ bg:'rgba(42,157,92,0.09)',   border:'2px solid rgba(42,157,92,0.35)',   label:'#4ec98a' },
-  'TEAM VIJAY': { bg:'rgba(150,42,200,0.08)',  border:'2px solid rgba(150,42,200,0.3)',   label:'#c080ff' },
+  'TEAM BLACK':{ bg:'rgba(255,255,255,0.05)', border:'2px solid rgba(255,255,255,0.2)',  label:'#E0DCD4' },
+  'TEAM BLUE': { bg:'rgba(42,109,220,0.10)',  border:'2px solid rgba(42,109,220,0.4)',   label:'#6EA8FF' },
+  'TEAM WHITE':{ bg:'rgba(220,216,208,0.07)', border:'2px solid rgba(220,216,208,0.25)', label:'#C8C4BC' },
+  'TEAM 1':    { bg:'rgba(200,144,42,0.08)',  border:'2px solid rgba(200,144,42,0.35)',  label:'var(--gold-light)' },
+  'TEAM 2':    { bg:'rgba(42,109,220,0.10)',  border:'2px solid rgba(42,109,220,0.4)',   label:'#6EA8FF' },
+  'TEAM 3':    { bg:'rgba(42,157,92,0.09)',   border:'2px solid rgba(42,157,92,0.35)',   label:'#4ec98a' },
+  'TEAM 4':    { bg:'rgba(192,57,43,0.08)',   border:'2px solid rgba(192,57,43,0.35)',   label:'#e07060' },
+  'GLADIATORS':{ bg:'rgba(200,144,42,0.09)',  border:'2px solid rgba(200,144,42,0.35)',  label:'var(--gold-light)' },
+  'NUTCRACKERS':{ bg:'rgba(42,157,92,0.09)', border:'2px solid rgba(42,157,92,0.35)',    label:'#4ec98a' },
+  'TEAM VIJAY':{ bg:'rgba(150,42,200,0.08)',  border:'2px solid rgba(150,42,200,0.3)',   label:'#c080ff' },
 };
 const FALLBACK_STYLES = [
   { bg:'rgba(200,144,42,0.07)', border:'2px solid rgba(200,144,42,0.3)',  label:'var(--gold-light)' },
@@ -424,95 +364,98 @@ const FALLBACK_STYLES = [
   { bg:'rgba(42,157,92,0.07)',  border:'2px solid rgba(42,157,92,0.3)',   label:'#4ec98a' },
   { bg:'rgba(192,57,43,0.07)',  border:'2px solid rgba(192,57,43,0.3)',   label:'#e07060' },
 ];
-function teamStyle(name) { const u=name.toUpperCase().trim(); return TEAM_STYLES[u]||null; }
-function isTeamRow(name) { const u=name.toUpperCase().trim(); return u.startsWith('TEAM ')||u==='GLADIATORS'||u==='NUTCRACKERS'||u.includes('VIJAY')||u==='TOTALS'||u==='TOTAL'||u==='TEAM TOTALS:'||/^TEAM \d+$/.test(u)||u.endsWith('TOTALS:'); }
+function teamStyle(name){ const u=name.toUpperCase().trim(); return TEAM_STYLES[u]||null; }
+function isTeamRow(name){ const u=name.toUpperCase().trim(); return u.startsWith('TEAM ')||u==='GLADIATORS'||u==='NUTCRACKERS'||u.includes('VIJAY')||u==='TOTALS'||u==='TOTAL'||u.endsWith('TOTALS:')||/^TEAM \d+$/.test(u); }
 
-// ── STATE ──
+// STATE
 let players=[], tourneyData={};
 let lbSortCol='ppg', lbSortAsc=false;
 
-// ── BUILD PLAYER ──
+// BUILD PLAYER
+// Columns from console: PLAYER,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%,PotG
 function buildPlayer(row) {
-  const keys = Object.keys(row);
-  // Sheet columns from console: PLAYER, GP, PPG, FGM, FGA, FG%, 3PM, 3PA, 3P%, RPG, APG, SPG, BPG, TOPG, +/−, W, L, WIN%
-  const name = (row['PLAYER']||row['Player']||row[keys[0]]||'').trim();
-  if (!name||name.length<2) return null;
-  const low = name.toLowerCase();
-  if (low==='player'||low==='name'||low.includes('total')||low===''||low.includes('group average')||low.includes('average')) return null;
-  const gp = n(g(row,'GP','G'));
-  if (gp===0) return null;
-  if (!window._logged) { window._logged=true; console.log('COLS:', JSON.stringify(keys)); console.log('ROW:', JSON.stringify(row)); }
+  const keys=Object.keys(row);
+  const name=(row['PLAYER']||row['Player']||row[keys[0]]||'').trim();
+  if(!name||name.length<2)return null;
+  const low=name.toLowerCase();
+  if(low==='player'||low==='name'||low.includes('total')||low===''||low.includes('group average')||low.includes('average'))return null;
+  const gp=n(g(row,'GP','G'));
+  if(gp===0)return null;
+  const p=(i)=>String(row[keys[i]]||'').trim();
   return {
     name, gp,
-    ppg:  n(g(row,'PPG')),
-    rpg:  n(g(row,'RPG')),
-    apg:  n(g(row,'APG')),
-    spg:  n(g(row,'SPG')),
-    bpg:  n(g(row,'BPG')),
-    topg: n(g(row,'TOPG')),
-    fgm:  n(g(row,'FGM')),
-    fga:  n(g(row,'FGA')),
-    fgPct:  g(row,'FG%')||'0%',
-    threePm:n(g(row,'3PM')),
-    threePA:n(g(row,'3PA')),
-    threePct:g(row,'3P%','3FG%')||'0%',
-    pm_val: n(g(row,'+/\u2212','+/-','PM')),
-    w:  n(g(row,'W')),
-    l:  n(g(row,'L')),
-    winPct: g(row,'WIN%','W%')||'0%',
-    pts: function(){ return this.ppg*this.gp; },
-    reb: function(){ return this.rpg*this.gp; },
-    ast: function(){ return this.apg*this.gp; },
-    stl: function(){ return this.spg*this.gp; },
-    blk: function(){ return this.bpg*this.gp; },
+    ppg:  n(g(row,'PPG')||p(2)),
+    fgm:  n(g(row,'FGM')||p(3)),
+    fga:  n(g(row,'FGA')||p(4)),
+    fgPct:  g(row,'FG%')||p(5)||'0%',
+    threePm:n(g(row,'3PM')||p(6)),
+    threePA:n(g(row,'3PA')||p(7)),
+    threePct:g(row,'3P%')||p(8)||'0%',
+    rpg:  n(g(row,'RPG')||p(9)),
+    apg:  n(g(row,'APG')||p(10)),
+    spg:  n(g(row,'SPG')||p(11)),
+    bpg:  n(g(row,'BPG')||p(12)),
+    topg: n(g(row,'TOPG')||p(13)),
+    pm_val:n(g(row,'+/-','PM')||p(14)),
+    w:  n(g(row,'W')||p(15)),
+    l:  n(g(row,'L')||p(16)),
+    winPct:g(row,'WIN%','W%')||p(17)||'0%',
+    potg: n(g(row,'PotG','POTG')||p(18)),
   };
 }
 
-// ── RENDER ALL ──
-function renderAll() { renderHero(); renderRoster(); renderLeaderboard(); renderTournaments(); }
+// RENDER ALL
+function renderAll(){renderHero();renderRoster();renderLeaderboard();renderTournaments();}
 
-// ── HERO ──
+// HERO
 function renderHero() {
-  if (!players.length) return;
-  const s=(fn)=>[...players].sort(fn);
-  const byPpg=s((a,b)=>b.ppg-a.ppg), byRpg=s((a,b)=>b.rpg-a.rpg);
-  const byApg=s((a,b)=>b.apg-a.apg), bySpg=s((a,b)=>b.spg-a.spg);
-  const byBpg=s((a,b)=>b.bpg-a.bpg), byPm=s((a,b)=>b.pm_val-a.pm_val);
-  const byFg=s((a,b)=>n(b.fgPct)-n(a.fgPct)).filter(p=>p.fga>0);
-  const by3p=s((a,b)=>n(b.threePct)-n(a.threePct)).filter(p=>p.threePA>0);
-  const byW=s((a,b)=>b.w-a.w);
+  if(!players.length)return;
+  const byPpg=[...players].sort((a,b)=>b.ppg-a.ppg);
+  const byRpg=[...players].sort((a,b)=>b.rpg-a.rpg);
+  const byApg=[...players].sort((a,b)=>b.apg-a.apg);
+  const bySpg=[...players].sort((a,b)=>b.spg-a.spg);
+  const byBpg=[...players].sort((a,b)=>b.bpg-a.bpg);
+  const byPm=[...players].sort((a,b)=>b.pm_val-a.pm_val);
+  const byFg=[...players].filter(p=>p.fga>0).sort((a,b)=>n(b.fgPct)-n(a.fgPct));
+  const by3p=[...players].filter(p=>p.threePA>0).sort((a,b)=>n(b.threePct)-n(a.threePct));
+  const byW=[...players].sort((a,b)=>b.w-a.w);
   const cards=[
-    {lbl:'Points / Game',   val:byPpg[0].ppg.toFixed(1),   name:byPpg[0].name},
-    {lbl:'Rebounds / Game', val:byRpg[0].rpg.toFixed(1),   name:byRpg[0].name},
-    {lbl:'Assists / Game',  val:byApg[0].apg.toFixed(1),   name:byApg[0].name},
-    {lbl:'Steals / Game',   val:bySpg[0].spg.toFixed(1),   name:bySpg[0].name},
-    {lbl:'Blocks / Game',   val:byBpg[0].bpg.toFixed(1),   name:byBpg[0].name},
-    {lbl:'FG%',             val:byFg[0]?.fgPct||'-',       name:byFg[0]?.name||'-'},
-    {lbl:'3-Point %',       val:by3p[0]?.threePct||'-',    name:by3p[0]?.name||'-'},
-    {lbl:'Most Wins',       val:byW[0].w,                  name:byW[0].name},
-    {lbl:'+/− Leader',      val:pm(byPm[0].pm_val),        name:byPm[0].name},
+    {lbl:'Points / Game',   val:byPpg[0].ppg.toFixed(1),  name:byPpg[0].name},
+    {lbl:'Rebounds / Game', val:byRpg[0].rpg.toFixed(1),  name:byRpg[0].name},
+    {lbl:'Assists / Game',  val:byApg[0].apg.toFixed(1),  name:byApg[0].name},
+    {lbl:'Steals / Game',   val:bySpg[0].spg.toFixed(1),  name:bySpg[0].name},
+    {lbl:'Blocks / Game',   val:byBpg[0].bpg.toFixed(1),  name:byBpg[0].name},
+    {lbl:'FG%',             val:byFg[0]?.fgPct||'-',      name:byFg[0]?.name||'-'},
+    {lbl:'3-Point %',       val:by3p[0]?.threePct||'-',   name:by3p[0]?.name||'-'},
+    {lbl:'Most Wins',       val:byW[0].w,                 name:byW[0].name},
+    {lbl:'+/- Leader',      val:pm(byPm[0].pm_val),       name:byPm[0].name},
   ];
   document.getElementById('hero-grid').innerHTML=cards.map(c=>`
     <div class="hcard"><div class="hcard-lbl">${c.lbl}</div><div class="hcard-val">${c.val}</div><div class="hcard-name">${c.name}</div></div>`).join('');
 
-  // Update hero pills
-  const pillPm  = document.getElementById('hero-pill-pm');
-  const pillPpg = document.getElementById('hero-pill-ppg');
-  const pillStl = document.getElementById('hero-pill-stl');
-  if (pillPm)  pillPm.textContent  = '+/− Leader: ' + pm(byPm[0].pm_val) + ' — ' + byPm[0].name;
-  if (pillPpg) pillPpg.textContent = 'Top Scorer: ' + byPpg[0].ppg.toFixed(1) + ' PPG — ' + byPpg[0].name;
-  const bySpg2=[...players].sort((a,b)=>b.spg-a.spg);
-  if (pillStl) pillStl.textContent = 'Steals Leader: ' + bySpg2[0].spg.toFixed(1) + ' SPG — ' + bySpg2[0].name;
+  // Stat pills - Top Scorer, Wins Leader, Most MVPs
+  const pillPpg  = document.getElementById('hero-pill-ppg');
+  const pillWins = document.getElementById('hero-pill-wins');
+  const pillMvp  = document.getElementById('hero-pill-mvp');
+  if(pillPpg)  pillPpg.textContent  = 'Top Scorer: ' + byPpg[0].ppg.toFixed(1) + ' PPG -- ' + byPpg[0].name;
+  if(pillWins) pillWins.textContent = 'Wins Leader: ' + byW[0].w + 'W -- ' + byW[0].name;
+  const byMvp=[...players].filter(p=>p.potg>0).sort((a,b)=>b.potg-a.potg);
+  if(pillMvp && byMvp.length>0) {
+    const cnt=Math.round(byMvp[0].potg);
+    pillMvp.textContent = cnt + 'x MVP -- ' + byMvp[0].name;
+  } else if(pillMvp) {
+    pillMvp.style.display='none';
+  }
 }
 
-// ── ROSTER ──
+// ROSTER
 function renderRoster() {
-  if (!players.length) return;
+  if(!players.length)return;
   document.getElementById('players-roster').innerHTML=players.map(p=>`
     <div class="pcard" onclick="openProfile('${esc(p.name)}')">
       <div class="pcard-bg">${p.gp}</div>
       <div class="pcard-name">${p.name}</div>
-      <div class="pcard-meta">${p.gp} GP · ${p.w}W-${p.l}L · ${p.winPct}</div>
+      <div class="pcard-meta">${p.gp} GP &middot; ${p.w}W-${p.l}L &middot; ${p.winPct}</div>
       <div class="pcard-stats">
         <div class="ms"><span class="ms-v gld">${p.ppg.toFixed(1)}</span><span class="ms-l">PTS</span></div>
         <div class="ms"><span class="ms-v gld">${p.rpg.toFixed(1)}</span><span class="ms-l">REB</span></div>
@@ -521,60 +464,51 @@ function renderRoster() {
         <div class="ms"><span class="ms-v">${p.bpg.toFixed(1)}</span><span class="ms-l">BLK</span></div>
         <div class="ms"><span class="ms-v">${p.fgPct}</span><span class="ms-l">FG%</span></div>
         <div class="ms"><span class="ms-v">${p.threePm}</span><span class="ms-l">3PM</span></div>
-        <div class="ms"><span class="ms-v ${p.pm_val>0?'pos':p.pm_val<0?'neg':''}">${pm(p.pm_val)}</span><span class="ms-l">+/−</span></div>
+        <div class="ms"><span class="ms-v ${p.pm_val>0?'pos':p.pm_val<0?'neg':''}">${pm(p.pm_val)}</span><span class="ms-l">+/-</span></div>
         <div class="ms"><span class="ms-v">${p.winPct}</span><span class="ms-l">WIN%</span></div>
       </div>
     </div>`).join('');
 }
 
 function filterPlayers(q) {
-  const query=q.toLowerCase().trim();
-  let vis=0;
+  const query=q.toLowerCase().trim(); let vis=0;
   document.querySelectorAll('#players-roster .pcard').forEach(c=>{
     const show=!query||c.querySelector('.pcard-name').textContent.toLowerCase().includes(query);
-    c.style.display=show?'':'none';
-    if(show)vis++;
+    c.style.display=show?'':'none'; if(show)vis++;
   });
   document.getElementById('no-results').style.display=vis===0?'block':'none';
 }
 
-// ── PROFILE ──
+// PROFILE
 function openProfile(name) {
-  const p=players.find(x=>x.name===name);
-  if(!p)return;
+  const p=players.find(x=>x.name===name); if(!p)return;
   let tRows='';
   Object.keys(TABS).forEach(key=>{
     const rows=tourneyData[key]||[];
-    // In stats tabs, col[0] key is the tournament title but VALUE is player/team name
     const row=rows.find(r=>{
-      const keys=Object.keys(r);
-      const val=String(r[keys[0]]||'').trim().toLowerCase();
-      return val===name.toLowerCase();
+      const rk=Object.keys(r);
+      return (r[rk[0]]||'').toLowerCase()===name.toLowerCase();
     });
     if(!row)return;
-    const rkeys=Object.keys(row);
-    const pos=(i)=>String(row[rkeys[i]]||'').trim();
-    // Columns: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
+    const rk=Object.keys(row);
+    const pos=(i)=>String(row[rk[i]]||'').trim();
+    // cols: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
     const rgp =parseFloat(g(row,'GP')||pos(1))||1;
     const rppg=parseFloat(g(row,'PPG')||pos(2))||0;
     const rrpg=parseFloat(g(row,'RPG')||pos(9))||0;
     const rapg=parseFloat(g(row,'APG')||pos(10))||0;
-    const rpm =n(g(row,'+/−','+/-','PM')||pos(14));
+    const rpm =n(g(row,'+/-','PM')||pos(14));
     const rw  =g(row,'W')||pos(15)||'0';
     const rl  =g(row,'L')||pos(16)||'0';
-    tRows+=`<tr>
-      <td>${TABS[key].label}</td><td>${rgp}</td>
-      <td class="tg">${rppg.toFixed(1)}</td><td>${rrpg.toFixed(1)}</td><td>${rapg.toFixed(1)}</td>
-      <td class="${pmc(rpm)}">${pm(rpm)}</td><td>${rw}-${rl}</td>
-    </tr>`;
+    tRows+=`<tr><td>${TABS[key].label}</td><td>${rgp}</td><td class="tg">${rppg.toFixed(1)}</td><td>${rrpg.toFixed(1)}</td><td>${rapg.toFixed(1)}</td><td class="${pmc(rpm)}">${pm(rpm)}</td><td>${rw}-${rl}</td></tr>`;
   });
   document.getElementById('profile-content').innerHTML=`
     <div class="prof-hero">
       <div class="prof-hero-bg">${p.gp}</div>
       <div class="prof-name">${p.name}</div>
-      <div class="prof-sub">${p.gp} GP · ${p.w}W-${p.l}L · ${p.winPct} Win Rate</div>
+      <div class="prof-sub">${p.gp} GP &middot; ${p.w}W-${p.l}L &middot; ${p.winPct} Win Rate${p.potg>0?' &middot; '+Math.round(p.potg)+'x MVP':''}</div>
       <div class="cstat-grid">
-        <div class="cstat"><span class="cstat-v gld">${pm(p.pm_val)}</span><span class="cstat-l">+/−</span></div>
+        <div class="cstat"><span class="cstat-v gld">${pm(p.pm_val)}</span><span class="cstat-l">+/-</span></div>
         <div class="cstat"><span class="cstat-v">${p.ppg.toFixed(1)}</span><span class="cstat-l">PPG</span></div>
         <div class="cstat"><span class="cstat-v">${p.fgPct}</span><span class="cstat-l">FG%</span></div>
         <div class="cstat"><span class="cstat-v">${p.threePct}</span><span class="cstat-l">3P%</span></div>
@@ -587,17 +521,17 @@ function openProfile(name) {
       </div>
     </div>
     ${tRows?`<div class="tbl-wrap"><div class="tbl-hd">Tournament Breakdown</div><div class="tbl-scroll"><table>
-      <thead><tr><th style="text-align:left">Tournament</th><th>GP</th><th>PPG</th><th>RPG</th><th>APG</th><th>+/−</th><th>W-L</th></tr></thead>
+      <thead><tr><th style="text-align:left">Tournament</th><th>GP</th><th>PPG</th><th>RPG</th><th>APG</th><th>+/-</th><th>W-L</th></tr></thead>
       <tbody>${tRows}</tbody></table></div></div>`:''}`;
   document.getElementById('players-list').style.display='none';
   document.getElementById('player-profile').style.display='block';
   window.scrollTo(0,0);
 }
-function closeProfile() { document.getElementById('players-list').style.display='block'; document.getElementById('player-profile').style.display='none'; }
+function closeProfile(){document.getElementById('players-list').style.display='block';document.getElementById('player-profile').style.display='none';}
 
-// ── LEADERBOARD ──
-function lbVal(p,col) {
-  switch(col) {
+// LEADERBOARD
+function lbVal(p,col){
+  switch(col){
     case 'name':    return p.name;
     case 'gp':      return p.gp;
     case 'w':       return p.w;
@@ -614,140 +548,102 @@ function lbVal(p,col) {
     case 'threePct':return n(p.threePct);
     case 'topg':    return p.topg;
     case 'pm':      return p.pm_val;
-    default:        return p.pm_val;
+    default:        return p.ppg;
   }
 }
-function updateSortHeaders() {
+function updateSortHeaders(){
   document.querySelectorAll('.sort-th').forEach(h=>{
     const base=h.dataset.label||h.dataset.col||'';
-    if (h.dataset.col===lbSortCol) {
-      h.innerHTML=base+' <span style="font-size:11px">'+(lbSortAsc?'↑':'↓')+'</span>';
+    if(h.dataset.col===lbSortCol){
+      h.innerHTML=base+' <span style="font-size:11px">'+(lbSortAsc?'&#8593;':'&#8595;')+'</span>';
       h.classList.add('active-sort');
     } else {
-      h.innerHTML=base+' <span style="opacity:0.25;font-size:11px">↕</span>';
+      h.innerHTML=base+' <span style="opacity:0.25;font-size:11px">&#8597;</span>';
       h.classList.remove('active-sort');
     }
   });
 }
-function renderLbTable() {
+function renderLbTable(){
   const sorted=[...players].sort((a,b)=>{
-    const av=lbVal(a,lbSortCol), bv=lbVal(b,lbSortCol);
-    if (typeof av==='string') return lbSortAsc?av.localeCompare(bv):bv.localeCompare(av);
+    const av=lbVal(a,lbSortCol),bv=lbVal(b,lbSortCol);
+    if(typeof av==='string')return lbSortAsc?av.localeCompare(bv):bv.localeCompare(av);
     return lbSortAsc?av-bv:bv-av;
   });
-
-  // Find which column index is active so we can highlight that cell
   const headers=Array.from(document.querySelectorAll('#lb-header th'));
   const activeIdx=headers.findIndex(h=>h.dataset.col===lbSortCol);
-
   document.getElementById('lb-body').innerHTML=sorted.map((p,i)=>{
-    // Build each cell, highlight the one matching activeIdx
-    const cell=(val,idx,extraClass='')=>{
+    const cell=(val,idx,extra='')=>{
       const isActive=idx===activeIdx;
-      const style=isActive?'color:var(--gold-light);font-weight:700;background:rgba(200,144,42,0.07);':'';
-      return `<td class="${extraClass}" style="${style}">${val}</td>`;
+      const st=isActive?'color:var(--gold-light);font-weight:700;background:rgba(200,144,42,0.07);':'';
+      return `<td class="${extra}" style="${st}">${val}</td>`;
     };
     return `<tr>
-      ${cell(i+1, 0, 'lrank')}
-      ${cell(`<span class="tlink" onclick="goPlayer('${esc(p.name)}')">${p.name}</span>`, 1)}
-      ${cell(p.gp, 2)}
-      ${cell(p.w, 3)}
-      ${cell(p.l, 4)}
-      ${cell(p.winPct, 5)}
-      ${cell(p.ppg.toFixed(1), 6)}
-      ${cell(p.rpg.toFixed(1), 7)}
-      ${cell(p.apg.toFixed(1), 8)}
-      ${cell(p.spg.toFixed(1), 9)}
-      ${cell(p.bpg.toFixed(1), 10)}
-      ${cell(p.fgm, 11)}
-      ${cell(p.fgPct, 12)}
-      ${cell(p.threePm, 13)}
-      ${cell(p.threePct, 14)}
-      ${cell(p.topg.toFixed(1), 15)}
-      ${cell(pm(p.pm_val), 16)}
+      ${cell(i+1,0,'lrank')}
+      ${cell('<span class="tlink" onclick="goPlayer(\''+esc(p.name)+'\')">'+p.name+'</span>',1)}
+      ${cell(p.gp,2)}${cell(p.w,3)}${cell(p.l,4)}${cell(p.winPct,5)}
+      ${cell(p.ppg.toFixed(1),6)}${cell(p.rpg.toFixed(1),7)}${cell(p.apg.toFixed(1),8)}
+      ${cell(p.spg.toFixed(1),9)}${cell(p.bpg.toFixed(1),10)}
+      ${cell(p.fgm,11)}${cell(p.fgPct,12)}${cell(p.threePm,13)}${cell(p.threePct,14)}
+      ${cell(p.topg.toFixed(1),15)}${cell(pm(p.pm_val),16)}
     </tr>`;
   }).join('');
 }
-function renderLeaderboard() {
-  if (!players.length) return;
-  updateSortHeaders();
-  renderLbTable();
+function renderLeaderboard(){
+  if(!players.length)return;
+  updateSortHeaders(); renderLbTable();
   document.querySelectorAll('.sort-th').forEach(th=>{
     th.addEventListener('click',()=>{
       const col=th.dataset.col;
-      if (lbSortCol===col) lbSortAsc=!lbSortAsc;
-      else { lbSortCol=col; lbSortAsc=false; }
-      updateSortHeaders();
-      renderLbTable();
+      if(lbSortCol===col)lbSortAsc=!lbSortAsc;
+      else{lbSortCol=col;lbSortAsc=false;}
+      updateSortHeaders(); renderLbTable();
     });
   });
 }
-function goPlayer(name) { showPage('players'); openProfile(name); }
+function goPlayer(name){showPage('players');openProfile(name);}
 
-// ── TOURNAMENTS ──
-function renderTournaments() {
+// TOURNAMENTS
+function renderTournaments(){
   document.getElementById('tourney-grid').innerHTML=Object.keys(TABS).map(key=>{
     const t=TABS[key];
-    const rows=(tourneyData[key]||[]).filter(r=>{const nm=r[Object.keys(r)[0]]||''; return nm.length>1&&!nm.toLowerCase().includes('total');});
+    const rows=(tourneyData[key]||[]).filter(r=>{const nm=r[Object.keys(r)[0]]||'';return nm.length>1&&!nm.toLowerCase().includes('total');});
     return `<div class="tcard" onclick="openTourney('${key}')">
       <div class="tcard-name">${t.label}</div>
-      <div class="tcard-date">${t.date} · ${rows.length>0?rows.length+' Players':'No data'}</div>
+      <div class="tcard-date">${t.date} &middot; ${rows.length>0?rows.length+' Players':'No data'}</div>
       <div class="pcard-stats" style="margin-top:10px">
         <div class="ms"><span class="ms-v gld">${rows.length}</span><span class="ms-l">Players</span></div>
-        <div class="ms"><span class="ms-v">${rows.length>0?'✓':'—'}</span><span class="ms-l">Stats</span></div>
-        <div class="ms"><span class="ms-v" style="color:var(--gold)">→</span><span class="ms-l">View</span></div>
+        <div class="ms"><span class="ms-v">${rows.length>0?'&#10003;':'&mdash;'}</span><span class="ms-l">Stats</span></div>
+        <div class="ms"><span class="ms-v" style="color:var(--gold)">&rarr;</span><span class="ms-l">View</span></div>
       </div>
     </div>`;
   }).join('');
 }
 
-function openTourney(key) {
-  const t=TABS[key];
-  const raw=tourneyData[key]||[];
-  let fbIdx=0;
-
-  // ── AVERAGES TABLE ──
-  // Stats tab structure (from console screenshot):
-  // Col0=TournamentTitle(player/team name), Col1=GP, Col2=PPG, Col3=RPG, Col4=APG
-  // Col5=SPG, Col6=BPG, Col7=TOPG, Col8=+/−, Col9=FGM, Col10=FGA, Col11=FG%
-  // Col12=3PM, Col13=3PA, Col14=3FG%  (Col15=W, Col16=L, Col17=WIN%)
-  let avgBody='', curStyle=FALLBACK_STYLES[0], playerCount=0;
+function openTourney(key){
+  const t=TABS[key]; const raw=tourneyData[key]||[];
+  let avgBody='', curStyle=FALLBACK_STYLES[0], fbIdx=0, playerCount=0;
 
   raw.forEach((r,rowIdx)=>{
-    const rkeys=Object.keys(r);
-    if (!rkeys.length) return;
-
-    // pos(i) = value at column i by position
-    const pos=(i)=>{ const k=rkeys[i]; return k!==undefined?String(r[k]||'').trim():''; };
-
-    // col 0 is always the name/team
-    const name=pos(0);
-    if (!name) return;
+    const rkeys=Object.keys(r); if(!rkeys.length)return;
+    const pos=(i)=>{const k=rkeys[i];return k!==undefined?String(r[k]||'').trim():'';};
+    const name=pos(0); if(!name)return;
     const nameUp=name.toUpperCase();
-    if (nameUp==='TOTALS'||nameUp==='TOTAL'||nameUp==='GROUP AVERAGE'||nameUp.includes('AVERAGE')||nameUp==='PLAYER') return;
+    if(nameUp==='TOTALS'||nameUp==='TOTAL'||nameUp==='GROUP AVERAGE'||nameUp.includes('AVERAGE')||nameUp==='PLAYER')return;
+    if(rowIdx<3)console.log('Tourney row '+rowIdx+':', JSON.stringify(r));
 
-    if (isTeamRow(name)) {
+    if(isTeamRow(name)){
       const ts=teamStyle(name)||FALLBACK_STYLES[fbIdx++%FALLBACK_STYLES.length];
       curStyle=ts;
       avgBody+=`<tr><td colspan="15" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.12em;color:${ts.label};padding:12px 16px;">${name}</td></tr>`;
     } else {
       playerCount++;
-      // Sheet layout (from Henry Cup VII screenshot):
-      // col0=Name col1=GP col2=PPG col3=RPG col4=APG col5=SPG col6=BPG
-      // col7=TOPG col8=+/- col9=FGM col10=FGA col11=FG% col12=3PM col13=3PA col14=3FG%
-      // col15=W col16=L col17=WIN%
-      // Exact column order from console log:
-      // col0=Name, col1=GP, col2=PPG, col3=FGM, col4=FGA, col5=FG%
-      // col6=3PM, col7=3PA, col8=3P%, col9=RPG, col10=APG, col11=SPG
-      // col12=BPG, col13=TOPG, col14=+/-, col15=W, col16=L, col17=WIN%
+      // Cols: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
       const pf=(i)=>parseFloat(pos(i))||0;
       const rgp  =pf(1)||1;
       const rppg =pf(2);
       const rfgm =pos(3)||'0';
-      const rfga =pos(4)||'0';
       const rfgpct=pos(5)||'-';
       const r3pm =pos(6)||'0';
-      const r3pa =pos(7)||'0';
       const r3pct=pos(8)||'-';
       const rrpg =pf(9);
       const rapg =pf(10);
@@ -758,7 +654,6 @@ function openTourney(key) {
       const rw   =pos(15)||'0';
       const rl   =pos(16)||'0';
       const rwpct=pos(17)||'-';
-
       avgBody+=`<tr style="background:${curStyle.bg}">
         <td class="tlink" style="text-align:left;padding-left:28px" onclick="goPlayer('${esc(name)}')">${name}</td>
         <td>${rgp}</td><td class="tg">${rppg.toFixed(1)}</td>
@@ -776,153 +671,107 @@ function openTourney(key) {
   const avgTable=`<div class="tbl-scroll"><table>
     <thead><tr>
       <th style="text-align:left">Player</th><th>GP</th><th>PPG</th><th>RPG</th><th>APG</th>
-      <th>SPG</th><th>BPG</th><th>FGM</th><th>FG%</th><th>3PM</th><th>3FG%</th>
-      <th>TOPG</th><th>+/−</th><th>W-L</th><th>WIN%</th>
+      <th>SPG</th><th>BPG</th><th>FGM</th><th>FG%</th><th>3PM</th><th>3P%</th>
+      <th>TOPG</th><th>+/-</th><th>W-L</th><th>WIN%</th>
     </tr></thead>
-    <tbody>${avgBody||'<tr><td colspan="15" style="padding:20px;color:var(--chalk-dim)">No stats yet</td></tr>'}</tbody>
+    <tbody>${avgBody||'<tr><td colspan="15" style="padding:20px;color:var(--chalk-dim)">No stats available</td></tr>'}</tbody>
   </table></div>`;
 
-  // ── RENDER PAGE ──
   document.getElementById('tourney-content').innerHTML=`
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:22px;margin-bottom:18px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:-10px;right:-10px;font-family:'Barlow Condensed',sans-serif;font-size:120px;font-weight:900;color:rgba(200,144,42,0.05);line-height:1;pointer-events:none">${playerCount}</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:clamp(24px,5vw,44px);font-weight:900;text-transform:uppercase;line-height:1;margin-bottom:6px">${t.label}</div>
-      <div style="font-size:12px;color:var(--chalk-dim)">${t.date} · ${playerCount} Players</div>
+      <div style="font-size:12px;color:var(--chalk-dim)">${t.date} &middot; ${playerCount} Players</div>
     </div>
     <div class="sl">Tournament Averages</div>
-    <div class="tbl-wrap" style="margin-bottom:24px">
-      <div class="tbl-hd">Per Game Averages — Grouped by Team</div>${avgTable}
-    </div>
+    <div class="tbl-wrap" style="margin-bottom:24px"><div class="tbl-hd">Per Game Averages &mdash; Grouped by Team</div>${avgTable}</div>
     <div class="sl">Game by Game Stats</div>
-    <div id="game-log-section">
-      <div style="padding:20px;text-align:center;color:var(--chalk-dim);">
-        <div class="spin" style="margin:0 auto 12px;width:32px;height:32px;border-width:2px;"></div>
-        Loading games...
-      </div>
-    </div>`;
+    <div id="game-log-section"><div style="padding:20px;text-align:center;color:var(--chalk-dim)"><div class="spin" style="margin:0 auto 12px;width:32px;height:32px;border-width:2px;"></div>Loading games...</div></div>`;
 
-  // Load game log
   fetchSheet(t.gameGid).then(gameRows=>{
-    if (!gameRows||!gameRows.length) { document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data available.</div>'; return; }
-
+    if(!gameRows||!gameRows.length){document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data.</div>';return;}
     console.log('GAME COLS:', JSON.stringify(Object.keys(gameRows[0])));
-    console.log('GAME R0:', JSON.stringify(gameRows[0]));
-    console.log('GAME R1:', JSON.stringify(gameRows[1]||{}));
-    console.log('GAME R2:', JSON.stringify(gameRows[2]||{}));
-
-    // Game log is horizontal: columns are "GAME 1- date", "", "GAME 2- date", "" ...
     const allCols=Object.keys(gameRows[0]);
     const gameCols=allCols.filter(c=>c.toUpperCase().includes('GAME'));
-
-    if (!gameCols.length) {
-      document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">Could not find game columns. Available: '+JSON.stringify(allCols.slice(0,8))+'</div>';
-      return;
-    }
-
-    const html=gameCols.map((gameCol,gameIdx)=>{
+    if(!gameCols.length){document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game columns found. Cols: '+JSON.stringify(allCols.slice(0,6))+'</div>';return;}
+    const html=gameCols.map((gameCol,gi)=>{
       const colIdx=allCols.indexOf(gameCol);
-      const nextGameCol=gameCols[gameIdx+1];
-      const nextIdx=nextGameCol?allCols.indexOf(nextGameCol):-1;
-
-      const teams=[];
-      let curTeam=null, curTs=FALLBACK_STYLES[0], fbi=0;
-
-      gameRows.forEach((row,ri)=>{
-        const cellName=String(row[gameCol]||'').trim();
-        if (!cellName) return;
+      const teams=[]; let curTeam=null,curTs=FALLBACK_STYLES[0],fbi=0;
+      gameRows.forEach(row=>{
+        const cellName=String(row[gameCol]||'').trim(); if(!cellName)return;
         const upper=cellName.toUpperCase();
-        if (upper.includes('GAME')||upper==='TOTALS'||upper==='TOTAL'||upper.endsWith('TOTALS:')) return;
-
-        if (isTeamRow(cellName)) {
-          curTs=teamStyle(cellName)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
-          curTeam={name:cellName,style:curTs,players:[]};
-          teams.push(curTeam);
-          return;
-        }
-        if (!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
-
-        // Stats at offsets from gameCol: 1=FGM,2=FGA,3=FG%,4=PTS,5=3PM,6=3PA,7=3P%,8=REBS,9=AST,10=STL,11=BLK,12=TO,13=+/-
-        const p=(offset)=>{const c=allCols[colIdx+offset];return c?clean(String(row[c]||'').trim()):'-';};
-        const ppm=n(p(13));
-        curTeam.players.push({name:cellName,fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),tpm:p(5),tpa:p(6),tpct:p(7),reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:ppm});
+        if(upper.includes('GAME')||upper==='TOTALS'||upper==='TOTAL'||upper.endsWith('TOTALS:'))return;
+        if(isTeamRow(cellName)){curTs=teamStyle(cellName)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];curTeam={name:cellName,style:curTs,players:[]};teams.push(curTeam);return;}
+        if(!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
+        const p=(off)=>{const c=allCols[colIdx+off];return c?clean(String(row[c]||'').trim()):'-';};
+        curTeam.players.push({name:cellName,fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),tpm:p(5),tpa:p(6),tpct:p(7),reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:n(p(13))});
       });
-
       const teamsHtml=teams.map(team=>{
         const ts=team.style;
         return `<tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 16px;">${team.name}</td></tr>`+
           team.players.map(pl=>`<tr style="background:${ts.bg}">
             <td class="tlink" style="text-align:left;padding-left:24px" onclick="goPlayer('${esc(pl.name)}')">${pl.name}</td>
-            <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgpct}</td>
-            <td class="tg">${pl.pts}</td>
+            <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgpct}</td><td class="tg">${pl.pts}</td>
             <td>${pl.tpm}/${pl.tpa}</td><td>${pl.tpct}</td>
             <td>${pl.reb}</td><td>${pl.ast}</td><td>${pl.stl}</td><td>${pl.blk}</td><td>${pl.to}</td>
             <td class="${pmc(pl.pm)}">${pm(pl.pm)}</td>
           </tr>`).join('');
       }).join('');
-
       return `<div class="tbl-wrap" style="margin-bottom:10px">
         <div class="tbl-hd" style="background:var(--panel2)">${gameCol}</div>
         <div class="tbl-scroll"><table>
-          <thead><tr>
-            <th style="text-align:left">Player</th>
-            <th>FGM/A</th><th>FG%</th><th>PTS</th><th>3PM/A</th><th>3P%</th>
-            <th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/−</th>
-          </tr></thead>
+          <thead><tr><th style="text-align:left">Player</th><th>FGM/A</th><th>FG%</th><th>PTS</th><th>3PM/A</th><th>3P%</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TO</th><th>+/-</th></tr></thead>
           <tbody>${teamsHtml}</tbody>
         </table></div>
       </div>`;
     }).join('');
-
     document.getElementById('game-log-section').innerHTML=html||'<div style="padding:16px;color:var(--chalk-dim)">No games found.</div>';
-  }).catch(e=>{
-    document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">Could not load game log: '+e.message+'</div>';
-  });
+  }).catch(e=>{document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">Could not load: '+e.message+'</div>';});
 
   document.getElementById('tournaments-list').style.display='none';
   document.getElementById('tournament-detail').style.display='block';
   window.scrollTo(0,0);
 }
-function closeTourney() { document.getElementById('tournaments-list').style.display='block'; document.getElementById('tournament-detail').style.display='none'; }
+function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
 
-// ── PAGE NAV ──
-function showPage(page) {
+// PAGE NAV
+function showPage(page){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===page));
   document.getElementById('page-'+page).classList.add('active');
   window.scrollTo(0,0);
 }
 
-// ── THEME ──
-function toggleTheme() {
+// THEME
+function toggleTheme(){
   const isLight=document.body.classList.toggle('light-mode');
   document.getElementById('theme-knob').style.left=isLight?'23px':'3px';
   document.getElementById('theme-knob').style.background=isLight?'var(--gold)':'var(--chalk-dim)';
   document.getElementById('theme-toggle').style.background=isLight?'rgba(200,144,42,0.2)':'var(--border)';
   localStorage.setItem('abg-theme',isLight?'light':'dark');
 }
-if (localStorage.getItem('abg-theme')==='light') {
+if(localStorage.getItem('abg-theme')==='light'){
   document.body.classList.add('light-mode');
   setTimeout(()=>{
-    const k=document.getElementById('theme-knob'), t=document.getElementById('theme-toggle');
+    const k=document.getElementById('theme-knob'),t=document.getElementById('theme-toggle');
     if(k){k.style.left='23px';k.style.background='var(--gold)';}
     if(t)t.style.background='rgba(200,144,42,0.2)';
   },100);
 }
 
-// ── LOAD ──
-function setMsg(m) { document.querySelector('.load-txt').textContent=m; }
-
-async function loadAll() {
+// LOAD
+function setMsg(m){document.querySelector('.load-txt').textContent=m;}
+async function loadAll(){
   try {
     setMsg('Connecting to Google Sheets...');
     const avgRows=await fetchSheet(AVG_GID);
     setMsg('Building player profiles...');
     players=avgRows.map(buildPlayer).filter(Boolean);
-    if (!players.length) throw new Error('No players loaded. Check Averages tab. Sample: '+JSON.stringify(Object.keys(avgRows[0]||{})));
+    if(!players.length)throw new Error('No players loaded. Cols: '+JSON.stringify(Object.keys(avgRows[0]||{})));
     setMsg('Loading tournament data...');
     await Promise.all(Object.keys(TABS).map(async key=>{
-      try { tourneyData[key]=await fetchSheet(TABS[key].statsGid); }
-      catch(e) { console.warn('Could not load',key,e.message); tourneyData[key]=[]; }
+      try{tourneyData[key]=await fetchSheet(TABS[key].statsGid);}
+      catch(e){console.warn('Could not load',key,e.message);tourneyData[key]=[];}
     }));
     renderAll();
     const ls=document.getElementById('loading-screen');
@@ -930,7 +779,7 @@ async function loadAll() {
     setTimeout(()=>ls.style.display='none',500);
   } catch(e) {
     console.error(e);
-    document.getElementById('err').innerHTML='⚠️ <strong>Could not load stats.</strong><br><small>'+e.message+'</small>';
+    document.getElementById('err').innerHTML='<strong>Could not load stats.</strong><br><small>'+e.message+'</small>';
     document.getElementById('err').style.display='block';
     document.getElementById('loading-screen').style.display='none';
   }
