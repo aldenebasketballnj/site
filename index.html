@@ -959,119 +959,203 @@ function buildAvgSection(rows, t) {
 function buildGamesSection(rows, t) {
   if(!rows.length){ document.getElementById('t-games-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">No game data.</div>'; return; }
 
-  // Game log structure: games side by side in column groups
-  // Each group: col[i]=name, col[i+1]=FGM, [+2]=FGA, [+3]=FG%, [+4]=PTS,
-  //             col[i+5]=3PM, [+6]=3PA, [+7]=3P%, [+8]=REBS, [+9]=AST,
-  //             col[i+10]=STL, [+11]=BLK, [+12]=TO, [+13]=+/-
-  // Groups separated by a blank column
-  // Total stats cols per game = 14 (name + 13 stats)
+  // From console analysis:
+  // Row0: ["TEAM BLUE","FGM","FGA","FG%","PTS","3PM","3PA","3P%","REBS","AST","STL","BLK","TO","","TEAM BLACK","FGM",...]
+  // Row1: ["Darwin","2","7","29%","5","1","1","100%","5","2","1","1","4","-7","Fernando",...]
+  // Structure: 14 cols per game (col0=name, 1=FGM,2=FGA,3=FG%,4=PTS,5=3PM,6=3PA,7=3P%,8=REBS,9=AST,10=STL,11=BLK,12=TO,13=+/-) then 1 blank = 15 cols total
+  // Title row: ["GAME 3- 7/5/2026","","","","","","","","","","","","","","GAME 4- 7/5/2026",...]
 
-  const STATS_PER_GAME = 14; // name + FGM+FGA+FG%+PTS+3PM+3PA+3P%+REBS+AST+STL+BLK+TO+PM
+  const COLS_PER_GAME = 15; // 14 stats + 1 blank separator
+  const totalCols = (rows[0]._cells || []).length;
 
-  // Find game title row - the row where cells contain "GAME X"
-  // and find which column indices each game starts at
-  let gameTitleRow = null;
-  let gameColStarts = [];
+  // Find game title row — contains "GAME" text
+  let titleRowCells = null;
+  let headerRowCells = null; // row with FGM,FGA,FG% etc
+  const playerRows = [];
 
   rows.forEach(row => {
     const cells = row._cells || [];
-    const hasGame = cells.some(v => String(v||'').trim().toUpperCase().startsWith('GAME '));
-    if(hasGame && !gameTitleRow) {
-      gameTitleRow = cells;
-      // Find all positions where a game title appears
-      cells.forEach((v, i) => {
-        if(String(v||'').trim().toUpperCase().startsWith('GAME ')) {
-          gameColStarts.push(i);
-        }
-      });
+    const first = String(cells[0]||'').trim().toUpperCase();
+    const hasgame = cells.some(v => String(v||'').toUpperCase().startsWith('GAME '));
+
+    if(hasgame && !titleRowCells) {
+      titleRowCells = cells;
+      return;
     }
+    // Header row has FGM as second cell
+    if(String(cells[1]||'').trim().toUpperCase() === 'FGM' && !headerRowCells) {
+      headerRowCells = cells;
+      return;
+    }
+    playerRows.push(cells);
   });
 
-  // If no explicit game title row, infer from column spacing
-  if(!gameColStarts.length) {
-    // Try: game starts at col 0, then every STATS_PER_GAME+1 cols (extra blank col)
-    const totalCols = (rows[0]._cells||[]).length;
-    for(let i=0; i<totalCols; i+=STATS_PER_GAME+1) {
-      gameColStarts.push(i);
-    }
+  // Determine game start columns from title row
+  const gameStarts = [];
+  if(titleRowCells) {
+    titleRowCells.forEach((v,i) => {
+      if(String(v||'').toUpperCase().startsWith('GAME ')) gameStarts.push(i);
+    });
+  }
+  // Fallback: games start at 0, 15, 30...
+  if(!gameStarts.length) {
+    for(let i=0; i<totalCols; i+=COLS_PER_GAME) gameStarts.push(i);
   }
 
-  console.log('=== GAME DEBUG ===');
-  console.log('Total rows:', rows.length);
-  console.log('Cols in row0:', (rows[0]._cells||[]).length);
-  console.log('Game col starts:', gameColStarts);
-  console.log('Title row:', JSON.stringify(gameTitleRow));
-  // Log first 5 rows fully
-  rows.slice(0,5).forEach((r,i)=>console.log('Row'+i+':', JSON.stringify(r._cells||[])));
+  console.log('Fixed game starts:', gameStarts, 'totalCols:', totalCols);
 
-  function pval(v) {
+  function pval(v){
     if(!v||v==='-'||v==='')return null;
     v=String(v).trim();
     if(v.startsWith('(')&&v.endsWith(')'))return -parseFloat(v.slice(1,-1))||0;
-    return parseFloat(v)||null;
+    const f=parseFloat(v); return isNaN(f)?null:f;
+  }
+  function pmfmt(v){
+    if(v===null)return '-';
+    return v>0?'+'+v:String(v);
+  }
+  function pmcol(v){
+    if(v===null||v===0)return '';
+    return v>0?'color:var(--green);font-weight:700':'color:var(--red);font-weight:700';
   }
 
-  const gamesHtml = gameColStarts.map((startCol, gi) => {
-    // Get game title from title row or default
-    let gameTitle = gameTitleRow ? String(gameTitleRow[startCol]||'').trim() : '';
+  const gamesHtml = gameStarts.map((startCol, gi) => {
+    // Game title from title row
+    let gameTitle = titleRowCells ? String(titleRowCells[startCol]||'').trim() : '';
     let gameDate = t.date;
     if(gameTitle.includes('-')) {
       const parts = gameTitle.split('-').map(s=>s.trim());
       gameTitle = parts[0];
-      gameDate = parts[1] || t.date;
+      gameDate  = parts.slice(1).join('-').trim() || t.date;
     }
     if(!gameTitle) gameTitle = 'Game ' + (gi+1);
 
-    // Process rows for THIS game only using startCol offset
-    const teams = [];
-    let curTeam = null, curTs = FALLBACK_STYLES[0], fbi = 0;
+    // From Row0: col[startCol]=TeamName, col[startCol+1]=FGM header (skip)
+    // Actual players start in playerRows
+    // Each game's team is identified by header row: col[startCol] = "TEAM BLUE" etc
 
-    rows.forEach(row => {
-      const cells = row._cells || [];
-      const cellVal = String(cells[startCol]||'').trim();
-      if(!cellVal) return;
-      const up = cellVal.toUpperCase();
+    // Get team name from header row (Row0 which has TEAM BLUE, FGM, FGA...)
+    const team1Name = headerRowCells ? String(headerRowCells[startCol]||'').trim() : '';
+    const team2StartCol = gameStarts[gi+1]; // next game start = same game's second team? No...
 
-      // Skip game title rows and totals
-      if(up.startsWith('GAME ') || up==='TOTALS' || up==='TOTAL' || up.endsWith('TOTALS:')) return;
+    // Actually from Row0: ["TEAM BLUE","FGM",...,"","TEAM BLACK","FGM",...]
+    // So within each game block (15 cols), col[0]=Team1Name, col[14]=Team2? No...
+    // Wait: Row0 col0="TEAM BLUE", col14="TEAM BLACK" — these are BOTH in the SAME game!
+    // So game 1 & 2 are side by side within the 29 cols
+    // Game 1: cols 0-13 (TEAM BLUE players)
+    // The SEPARATOR col is col 13 (the "" between teams)
+    // Then Game 1 Team 2: cols 14-27 (TEAM BLACK players)
+    // But title row has GAME 3 at col 0, GAME 4 at col ~14
 
-      // Team header
-      if(isTeamRow(cellVal)) {
-        curTs = teamStyle(cellVal) || FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
-        curTeam = {name:cellVal, style:curTs, players:[]};
-        teams.push(curTeam);
-        return;
+    // So each "game" in gameStarts is actually one TEAM's data for that game
+    // And the games are paired: gameStarts[0]+gameStarts[1] = Game 3, gameStarts[2]+gameStarts[3] = Game 4
+
+    // Let's rebuild: find ALL team blocks, then pair them into games
+    return null; // handled below
+  });
+
+  // CORRECT APPROACH: scan header row for team names, pair consecutive teams as one game
+  const teamBlocks = [];
+  if(headerRowCells) {
+    headerRowCells.forEach((v, i) => {
+      const val = String(v||'').trim();
+      if(val && isTeamRow(val) && !val.toUpperCase().includes('FGM')) {
+        teamBlocks.push({ teamName: val, startCol: i });
       }
-
-      if(!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
-
-      const p=(off)=>String(cells[startCol+off]||'').trim();
-      const rawPm = pval(p(13));
-      const pmStr = rawPm===null?'-':(rawPm>0?'+'+rawPm:String(rawPm));
-      const pmColor = rawPm===null?'':(rawPm>0?'color:var(--green);font-weight:700':rawPm<0?'color:var(--red);font-weight:700':'');
-
-      curTeam.players.push({
-        name:cellVal,
-        fgm:p(1), fga:p(2), fgp:clean(p(3)),
-        pts:p(4),
-        t3m:p(5), t3a:p(6), t3p:clean(p(7)),
-        reb:p(8), ast:p(9), stl:p(10), blk:p(11), to:p(12),
-        pmStr, pmColor
-      });
     });
+  }
 
-    // Only show games that actually have player data
-    const hasPlayers = teams.some(tm=>tm.players.length>0);
-    if(!hasPlayers) return '';
+  // If no header row, find teams from player rows
+  if(!teamBlocks.length) {
+    // Use title row game starts, assume team name is in first cell of player rows at each game col
+    gameStarts.forEach((sc, gi) => {
+      // Find first non-empty non-game cell at this col position
+      for(const cells of playerRows) {
+        const v = String(cells[sc]||'').trim();
+        if(v && !v.toUpperCase().startsWith('GAME') && isTeamRow(v)) {
+          teamBlocks.push({ teamName: v, startCol: sc });
+          break;
+        }
+      }
+    });
+  }
 
-    // Limit to 2 teams per game (the actual participants)
-    const gamTeams = teams.filter(tm=>tm.players.length>0).slice(0,2);
+  console.log('Team blocks:', teamBlocks.map(b=>b.teamName+'@'+b.startCol));
 
-    const teamsHtml = gamTeams.map(team => {
-      const ts = team.style;
+  // Pair team blocks into games using title row
+  // title row: GAME3 at col X, GAME4 at col Y => game3=[teamBlock at X, teamBlock at Y-something]
+  // Simplest: 2 teams per game, so pair teamBlocks[0]+teamBlocks[1]=game1, [2]+[3]=game2, etc
+  const games = [];
+
+  // Get game titles from title row
+  const gameTitles = [];
+  if(titleRowCells) {
+    titleRowCells.forEach((v,i) => {
+      if(String(v||'').toUpperCase().startsWith('GAME ')) {
+        let title = String(v||'').trim();
+        let date = t.date;
+        if(title.includes('-')){const p=title.split('-').map(s=>s.trim());title=p[0];date=p.slice(1).join('-').trim()||t.date;}
+        gameTitles.push({title, date, col:i});
+      }
+    });
+  }
+
+  // Build games: each game title corresponds to 2 team blocks
+  // Find which team blocks belong to each game based on column proximity
+  if(gameTitles.length > 0 && teamBlocks.length > 0) {
+    gameTitles.forEach((gt, gi) => {
+      const nextGt = gameTitles[gi+1];
+      const endCol = nextGt ? nextGt.col : totalCols;
+      // Team blocks whose startCol is between this game's col and next game's col
+      const gameTeams = teamBlocks.filter(b => b.startCol >= gt.col && b.startCol < endCol);
+      if(gameTeams.length) games.push({title:gt.title, date:gt.date, teams:gameTeams});
+    });
+  } else if(teamBlocks.length >= 2) {
+    // Fallback: pair every 2 team blocks
+    for(let i=0; i<teamBlocks.length; i+=2) {
+      const g = { title:'Game '+(Math.floor(i/2)+1), date:t.date, teams:[teamBlocks[i]] };
+      if(teamBlocks[i+1]) g.teams.push(teamBlocks[i+1]);
+      games.push(g);
+    }
+  }
+
+  console.log('Games:', games.map(g=>g.title+': '+g.teams.map(tm=>tm.teamName).join(' vs ')));
+
+  // For each game, extract player rows per team
+  const gHtml = games.map(game => {
+    const teamsHtml = game.teams.map(tb => {
+      const ts = teamStyle(tb.teamName) || FALLBACK_STYLES[0];
+      const sc = tb.startCol;
+
+      // Collect players for this team: rows where cell[sc] is a player name (not team/game/empty)
+      const players = [];
+      playerRows.forEach(cells => {
+        const v = String(cells[sc]||'').trim();
+        if(!v || isTeamRow(v) || v.toUpperCase().startsWith('GAME') || v.toUpperCase()==='TOTALS') return;
+        const rawPm = pval(String(cells[sc+13]||'').trim());
+        players.push({
+          name: v,
+          fgm: String(cells[sc+1]||'').trim(),
+          fga: String(cells[sc+2]||'').trim(),
+          fgp: clean(String(cells[sc+3]||'').trim()),
+          pts: String(cells[sc+4]||'').trim(),
+          t3m: String(cells[sc+5]||'').trim(),
+          t3a: String(cells[sc+6]||'').trim(),
+          t3p: clean(String(cells[sc+7]||'').trim()),
+          reb: String(cells[sc+8]||'').trim(),
+          ast: String(cells[sc+9]||'').trim(),
+          stl: String(cells[sc+10]||'').trim(),
+          blk: String(cells[sc+11]||'').trim(),
+          to:  String(cells[sc+12]||'').trim(),
+          pmStr: pmfmt(rawPm),
+          pmColor: pmcol(rawPm),
+        });
+      });
+
+      if(!players.length) return '';
       return `
-        <tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${team.name}</td></tr>
-        ${team.players.map(pl=>`<tr style="background:${ts.bg}">
+        <tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${tb.teamName}</td></tr>
+        ${players.map(pl=>`<tr style="background:${ts.bg}">
           <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(pl.name)}')">${pl.name}</td>
           <td>${pl.fgm}/${pl.fga}</td><td>${pl.fgp}</td>
           <td class="tg">${pl.pts}</td>
@@ -1079,13 +1163,14 @@ function buildGamesSection(rows, t) {
           <td>${pl.reb}</td><td>${pl.ast}</td><td>${pl.stl}</td><td>${pl.blk}</td><td>${pl.to}</td>
           <td style="${pl.pmColor}">${pl.pmStr}</td>
         </tr>`).join('')}`;
-    }).join('');
+    }).filter(Boolean).join('');
 
+    if(!teamsHtml) return '';
     return `
       <div class="tbl-wrap" style="margin-bottom:12px">
         <div class="tbl-hd" style="background:var(--panel2);display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">${gameTitle}</span>
-          <span style="font-size:10px;color:var(--chalk-dim);font-weight:400">${gameDate}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em">${game.title}</span>
+          <span style="font-size:10px;color:var(--chalk-dim);font-weight:400">${game.date}</span>
         </div>
         <div class="tbl-scroll"><table>
           <thead><tr>
@@ -1101,7 +1186,7 @@ function buildGamesSection(rows, t) {
 
   document.getElementById('t-games-section').innerHTML=`
     <div class="sl">Game by Game Stats</div>
-    ${gamesHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games found.</div>'}`;
+    ${gHtml||'<div style="padding:16px;color:var(--chalk-dim)">No games parsed. Check console for debug info.</div>'}`;
 }
 
 function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
