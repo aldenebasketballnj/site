@@ -319,6 +319,10 @@ const TEAM_STYLES = {
   'TEAM BLACK': { bg:'rgba(255,255,255,0.05)', border:'2px solid rgba(255,255,255,0.2)',  label:'#E0DCD4' },
   'TEAM BLUE':  { bg:'rgba(42,109,220,0.10)',  border:'2px solid rgba(42,109,220,0.4)',   label:'#6EA8FF' },
   'TEAM WHITE': { bg:'rgba(220,216,208,0.07)', border:'2px solid rgba(220,216,208,0.25)', label:'#C8C4BC' },
+  'TEAM 1':     { bg:'rgba(200,144,42,0.08)',  border:'2px solid rgba(200,144,42,0.35)',  label:'var(--gold-light)' },
+  'TEAM 2':     { bg:'rgba(42,109,220,0.10)',  border:'2px solid rgba(42,109,220,0.4)',   label:'#6EA8FF' },
+  'TEAM 3':     { bg:'rgba(42,157,92,0.09)',   border:'2px solid rgba(42,157,92,0.35)',   label:'#4ec98a' },
+  'TEAM 4':     { bg:'rgba(192,57,43,0.08)',   border:'2px solid rgba(192,57,43,0.35)',   label:'#e07060' },
   'GLADIATORS': { bg:'rgba(200,144,42,0.09)',  border:'2px solid rgba(200,144,42,0.35)',  label:'var(--gold-light)' },
   'NUTCRACKERS':{ bg:'rgba(42,157,92,0.09)',   border:'2px solid rgba(42,157,92,0.35)',   label:'#4ec98a' },
   'TEAM VIJAY': { bg:'rgba(150,42,200,0.08)',  border:'2px solid rgba(150,42,200,0.3)',   label:'#c080ff' },
@@ -330,7 +334,7 @@ const FALLBACK_STYLES = [
   { bg:'rgba(192,57,43,0.07)',  border:'2px solid rgba(192,57,43,0.3)',   label:'#e07060' },
 ];
 function teamStyle(name) { const u=name.toUpperCase().trim(); return TEAM_STYLES[u]||null; }
-function isTeamRow(name) { const u=name.toUpperCase().trim(); return u.startsWith('TEAM ')||u==='GLADIATORS'||u==='NUTCRACKERS'||u.includes('TEAM VIJAY')||u==='TOTALS'||u==='TOTAL'; }
+function isTeamRow(name) { const u=name.toUpperCase().trim(); return u.startsWith('TEAM ')||u==='GLADIATORS'||u==='NUTCRACKERS'||u.includes('VIJAY')||u==='TOTALS'||u==='TOTAL'||u==='TEAM TOTALS:'||/^TEAM \d+$/.test(u)||u.endsWith('TOTALS:'); }
 
 // ── STATE ──
 let players=[], tourneyData={};
@@ -441,17 +445,23 @@ function openProfile(name) {
   let tRows='';
   Object.keys(TABS).forEach(key=>{
     const rows=tourneyData[key]||[];
-    const row=rows.find(r=>(r[Object.keys(r)[0]]||'').toLowerCase()===name.toLowerCase());
+    // In stats tabs, col[0] key is the tournament title but VALUE is player/team name
+    const row=rows.find(r=>{
+      const keys=Object.keys(r);
+      const val=String(r[keys[0]]||'').trim().toLowerCase();
+      return val===name.toLowerCase();
+    });
     if(!row)return;
     const rkeys=Object.keys(row);
     const pos=(i)=>String(row[rkeys[i]]||'').trim();
-    const rgp=parseFloat(sg(row,'GP','G')||pos(1))||1;
-    const rppg=parseFloat(sg(row,'PPG')||pos(2))||0;
-    const rrpg=parseFloat(sg(row,'RPG')||pos(3))||0;
-    const rapg=parseFloat(sg(row,'APG')||pos(4))||0;
-    const rpm=n(sg(row,'+/\u2212','+/-','PM')||pos(8));
-    const rw=sg(row,'W')||pos(15)||'0';
-    const rl=sg(row,'L')||pos(16)||'0';
+    // Columns: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
+    const rgp =parseFloat(g(row,'GP')||pos(1))||1;
+    const rppg=parseFloat(g(row,'PPG')||pos(2))||0;
+    const rrpg=parseFloat(g(row,'RPG')||pos(9))||0;
+    const rapg=parseFloat(g(row,'APG')||pos(10))||0;
+    const rpm =n(g(row,'+/−','+/-','PM')||pos(14));
+    const rw  =g(row,'W')||pos(15)||'0';
+    const rl  =g(row,'L')||pos(16)||'0';
     tRows+=`<tr>
       <td>${TABS[key].label}</td><td>${rgp}</td>
       <td class="tg">${rppg.toFixed(1)}</td><td>${rrpg.toFixed(1)}</td><td>${rapg.toFixed(1)}</td>
@@ -621,19 +631,25 @@ function openTourney(key) {
       // col0=Name col1=GP col2=PPG col3=RPG col4=APG col5=SPG col6=BPG
       // col7=TOPG col8=+/- col9=FGM col10=FGA col11=FG% col12=3PM col13=3PA col14=3FG%
       // col15=W col16=L col17=WIN%
+      // Exact column order from console log:
+      // col0=Name, col1=GP, col2=PPG, col3=FGM, col4=FGA, col5=FG%
+      // col6=3PM, col7=3PA, col8=3P%, col9=RPG, col10=APG, col11=SPG
+      // col12=BPG, col13=TOPG, col14=+/-, col15=W, col16=L, col17=WIN%
       const pf=(i)=>parseFloat(pos(i))||0;
       const rgp  =pf(1)||1;
       const rppg =pf(2);
-      const rrpg =pf(3);
-      const rapg =pf(4);
-      const rspg =pf(5);
-      const rbpg =pf(6);
-      const rtopg=pf(7);
-      const rpm  =n(pos(8));
-      const rfgm =pos(9)||'0';
-      const rfgpct=pos(11)||'-';
-      const r3pm =pos(12)||'0';
-      const r3pct=pos(14)||'-';
+      const rfgm =pos(3)||'0';
+      const rfga =pos(4)||'0';
+      const rfgpct=pos(5)||'-';
+      const r3pm =pos(6)||'0';
+      const r3pa =pos(7)||'0';
+      const r3pct=pos(8)||'-';
+      const rrpg =pf(9);
+      const rapg =pf(10);
+      const rspg =pf(11);
+      const rbpg =pf(12);
+      const rtopg=pf(13);
+      const rpm  =n(pos(14));
       const rw   =pos(15)||'0';
       const rl   =pos(16)||'0';
       const rwpct=pos(17)||'-';
@@ -646,7 +662,7 @@ function openTourney(key) {
         <td>${rfgm}</td><td>${clean(rfgpct)}</td>
         <td>${r3pm}</td><td>${clean(r3pct)}</td>
         <td>${rtopg.toFixed(1)}</td>
-        <td class="${pmc(rpm)}">${pm(rpm)}</td>
+        <td>${pm(rpm)}</td>
         <td>${rw}-${rl}</td><td>${clean(rwpct)}</td>
       </tr>`;
     }
@@ -694,14 +710,15 @@ function openTourney(key) {
     const gameCols=allCols.filter(c=>c.toUpperCase().includes('GAME'));
 
     if (!gameCols.length) {
-      document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">Could not find game columns in log. Cols: '+JSON.stringify(allCols.slice(0,6))+'</div>';
+      document.getElementById('game-log-section').innerHTML='<div style="padding:16px;color:var(--chalk-dim)">Could not find game columns. Available: '+JSON.stringify(allCols.slice(0,8))+'</div>';
       return;
     }
 
-    const html=gameCols.map(gameCol=>{
+    const html=gameCols.map((gameCol,gameIdx)=>{
       const colIdx=allCols.indexOf(gameCol);
-      // Stats are in next 13 columns after the name column
-      // name, FGM, FGA, FG%, PTS, 3PM, 3PA, 3P%, REBS, AST, STL, BLK, TO, +/-
+      const nextGameCol=gameCols[gameIdx+1];
+      const nextIdx=nextGameCol?allCols.indexOf(nextGameCol):-1;
+
       const teams=[];
       let curTeam=null, curTs=FALLBACK_STYLES[0], fbi=0;
 
@@ -709,30 +726,20 @@ function openTourney(key) {
         const cellName=String(row[gameCol]||'').trim();
         if (!cellName) return;
         const upper=cellName.toUpperCase();
+        if (upper.includes('GAME')||upper==='TOTALS'||upper==='TOTAL'||upper.endsWith('TOTALS:')) return;
 
-        // Log first few rows
-        if (ri < 3) console.log('Game row '+ri+':', JSON.stringify(row));
-
-        if (upper.includes('GAME')||upper==='TOTALS'||upper==='TOTAL') return;
-
-        if (upper.startsWith('TEAM ')||upper==='GLADIATORS'||upper==='NUTCRACKERS'||upper.startsWith('TEAM VIJAY')) {
+        if (isTeamRow(cellName)) {
           curTs=teamStyle(cellName)||FALLBACK_STYLES[fbi++%FALLBACK_STYLES.length];
           curTeam={name:cellName,style:curTs,players:[]};
           teams.push(curTeam);
           return;
         }
-        if (!curTeam) { curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]}; teams.push(curTeam); }
+        if (!curTeam){curTeam={name:'Players',style:FALLBACK_STYLES[0],players:[]};teams.push(curTeam);}
 
-        // Get stats positionally from columns AFTER gameCol
-        // Layout: name, FGM, FGA, FG%, PTS, 3PM, 3PA, 3P%, REBS, AST, STL, BLK, TO, +/-
-        const p=(offset)=>{ const c=allCols[colIdx+offset]; return c?clean(String(row[c]||'').trim()):'-'; };
+        // Stats at offsets from gameCol: 1=FGM,2=FGA,3=FG%,4=PTS,5=3PM,6=3PA,7=3P%,8=REBS,9=AST,10=STL,11=BLK,12=TO,13=+/-
+        const p=(offset)=>{const c=allCols[colIdx+offset];return c?clean(String(row[c]||'').trim()):'-';};
         const ppm=n(p(13));
-        curTeam.players.push({
-          name:cellName,
-          fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),
-          tpm:p(5),tpa:p(6),tpct:p(7),
-          reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:ppm
-        });
+        curTeam.players.push({name:cellName,fgm:p(1),fga:p(2),fgpct:p(3),pts:p(4),tpm:p(5),tpa:p(6),tpct:p(7),reb:p(8),ast:p(9),stl:p(10),blk:p(11),to:p(12),pm:ppm});
       });
 
       const teamsHtml=teams.map(team=>{
