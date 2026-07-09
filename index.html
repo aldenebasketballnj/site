@@ -116,59 +116,73 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 .tcard-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;text-transform:uppercase;margin-bottom:3px;}
 .tcard-date{font-size:11px;color:var(--chalk-dim);margin-bottom:12px;}
 
-/* TAGLINE SPARKLE ANIMATION */
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-@keyframes fadeSlideUp {
-  from { opacity:0; transform:translateY(12px); }
-  to   { opacity:1; transform:translateY(0); }
-}
-.hero-tagline {
-  animation: fadeSlideUp 0.8s ease forwards;
-  animation-delay: 0.3s;
-  opacity: 0;
-}
-.hero-tagline-inner {
-  display: inline-block;
-  background: linear-gradient(90deg,
-    rgba(238,234,226,0.4) 0%,
-    rgba(238,234,226,0.4) 30%,
-    rgba(232,172,74,0.95) 50%,
-    rgba(238,234,226,0.4) 70%,
-    rgba(238,234,226,0.4) 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
-  animation-delay: 1.2s;
-}
-
-/* SLOT MACHINE for hero cards */
-@keyframes slotSpin {
-  0%   { transform: translateY(-100%); opacity:0; }
-  15%  { transform: translateY(8px);   opacity:1; }
-  30%  { transform: translateY(-4px);  opacity:1; }
-  45%  { transform: translateY(2px);   opacity:1; }
-  60%  { transform: translateY(0);     opacity:1; }
-  100% { transform: translateY(0);     opacity:1; }
-}
-.hcard-val.slot-animate {
-  display: inline-block;
-  animation: slotSpin 0.7s cubic-bezier(0.23,1,0.32,1) forwards;
-  opacity: 0;
-}
-
-/* HERO title animation */
+/* ── HERO TITLE ── */
 @keyframes heroTitle {
   from { opacity:0; transform:translateY(20px); }
   to   { opacity:1; transform:translateY(0); }
 }
-.hero-title-aldene   { animation: heroTitle 0.7s ease forwards; animation-delay:0.1s; opacity:0; }
-.hero-title-bball    { animation: heroTitle 0.7s ease forwards; animation-delay:0.25s; opacity:0; }
+.hero-title-aldene { animation:heroTitle 0.7s ease forwards; animation-delay:0.1s; opacity:0; }
+.hero-title-bball  { animation:heroTitle 0.7s ease forwards; animation-delay:0.25s; opacity:0; }
+
+/* ── TAGLINE SHIMMER ── */
+@keyframes fadeSlideUp { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+@keyframes shimmer { 0%{background-position:-200% center;}100%{background-position:200% center;} }
+.hero-tagline { animation:fadeSlideUp 0.8s ease forwards; animation-delay:0.4s; opacity:0; }
+.hero-tagline-inner {
+  display:inline-block;
+  background:linear-gradient(90deg,rgba(238,234,226,0.4) 0%,rgba(238,234,226,0.4) 30%,rgba(232,172,74,0.95) 50%,rgba(238,234,226,0.4) 70%,rgba(238,234,226,0.4) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  animation:shimmer 3s linear infinite; animation-delay:1.5s;
+}
+
+/* ── FLASH PHOTOGRAPHY ORBS ── */
+@keyframes flashOrb1 {
+  0%,100%  { opacity:0.18; transform:scale(1)   translate(0,0); }
+  8%       { opacity:0.95; transform:scale(1.35) translate(0,0); }
+  10%      { opacity:0.15; transform:scale(1)    translate(0,0); }
+  35%      { opacity:0.22; transform:scale(1.05) translate(30px,-20px); }
+  42%      { opacity:0.90; transform:scale(1.4)  translate(30px,-20px); }
+  44%      { opacity:0.15; transform:scale(1)    translate(30px,-20px); }
+  75%      { opacity:0.20; transform:scale(1.08) translate(-15px,25px); }
+  80%      { opacity:0.85; transform:scale(1.3)  translate(-15px,25px); }
+  82%      { opacity:0.14; transform:scale(1)    translate(-15px,25px); }
+}
+@keyframes flashOrb2 {
+  0%,100%  { opacity:0.12; transform:scale(1)   translate(0,0); }
+  20%      { opacity:0.88; transform:scale(1.45) translate(-25px,15px); }
+  22%      { opacity:0.10; transform:scale(1)    translate(-25px,15px); }
+  55%      { opacity:0.90; transform:scale(1.4)  translate(20px,-20px); }
+  57%      { opacity:0.12; transform:scale(1)    translate(20px,-20px); }
+  88%      { opacity:0.80; transform:scale(1.3)  translate(-10px,10px); }
+  90%      { opacity:0.12; transform:scale(1)    translate(-10px,10px); }
+}
+.hero-orb1 { animation:flashOrb1 6s ease-in-out infinite; }
+.hero-orb2 { animation:flashOrb2 7.5s ease-in-out infinite; animation-delay:1.2s; }
+
+/* ── FIRE PILLS ── */
+@keyframes fireGlow {
+  0%,100% { box-shadow:0 0 6px rgba(200,100,0,0.6),0 0 12px rgba(200,100,0,0.3),0 0 20px rgba(200,144,42,0.2); filter:brightness(1); }
+  25%     { box-shadow:0 0 10px rgba(255,140,0,0.9),0 0 22px rgba(255,80,0,0.5),0 0 35px rgba(200,144,42,0.35); filter:brightness(1.15); }
+  50%     { box-shadow:0 0 8px rgba(255,60,0,0.7),0 0 18px rgba(200,80,0,0.4),0 0 28px rgba(200,144,42,0.25); filter:brightness(1.05); }
+  75%     { box-shadow:0 0 12px rgba(255,160,0,1),0 0 25px rgba(255,100,0,0.6),0 0 40px rgba(200,144,42,0.4); filter:brightness(1.2); }
+}
+@keyframes fireGlow2 {
+  0%,100% { box-shadow:0 0 5px rgba(180,100,0,0.4),0 0 10px rgba(180,80,0,0.2); filter:brightness(1); }
+  33%     { box-shadow:0 0 9px rgba(220,120,0,0.7),0 0 18px rgba(200,60,0,0.35); filter:brightness(1.1); }
+  66%     { box-shadow:0 0 7px rgba(255,140,0,0.8),0 0 15px rgba(220,80,0,0.4); filter:brightness(1.08); }
+}
+@keyframes pillEntrance {
+  0%   { opacity:0; transform:translateY(16px) scale(0.9); }
+  60%  { opacity:1; transform:translateY(-3px) scale(1.03); }
+  100% { opacity:1; transform:translateY(0)   scale(1); }
+}
+#hero-pill-ppg  { animation:pillEntrance 0.6s ease forwards, fireGlow  2.8s ease-in-out infinite; animation-delay:0.8s,1.4s; opacity:0; }
+#hero-pill-wins { animation:pillEntrance 0.6s ease forwards, fireGlow2 3.2s ease-in-out infinite; animation-delay:1.0s,1.6s; opacity:0; }
+#hero-pill-mvp  { animation:pillEntrance 0.6s ease forwards, fireGlow2 2.5s ease-in-out infinite; animation-delay:1.2s,1.8s; opacity:0; }
+
+/* ── COUNT UP number display ── */
+.hcard-val { overflow:hidden; }
 
 /* LIGHT MODE */
 body.light-mode{--black:#F5F3EE;--panel:#FFFFFF;--panel2:#F0EDE8;--border:#DDD9D0;--chalk:#1a1a1a;--chalk-mid:#5a5650;--chalk-dim:#9a9690;--gold:#9a6e1a;--gold-light:#C8902A;--green:#1a7a42;--red:#a02020;}
@@ -491,9 +505,44 @@ function renderHero() {
   document.getElementById('hero-grid').innerHTML=cards.map((c,i)=>`
     <div class="hcard">
       <div class="hcard-lbl">${c.lbl}</div>
-      <div class="hcard-val slot-animate" style="animation-delay:${0.1+i*0.08}s">${c.val}</div>
+      <div class="hcard-val" id="hcard-val-${i}" style="opacity:0;transition:opacity 0.4s;">${c.val}</div>
       <div class="hcard-name">${c.name}</div>
     </div>`).join('');
+
+  // Count-up animation for each card
+  cards.forEach((c, i) => {
+    const el = document.getElementById('hcard-val-' + i);
+    if (!el) return;
+    const delay = 300 + i * 120;
+    setTimeout(() => {
+      el.style.opacity = '1';
+      const raw = String(c.val).replace('+','').replace('-','');
+      const isNeg = String(c.val).startsWith('-');
+      const isPos = String(c.val).startsWith('+');
+      const num = parseFloat(raw);
+      if (isNaN(num) || raw.includes('%') && num < 5) {
+        // Non-numeric or percentage — just show it
+        return;
+      }
+      const isDecimal = String(c.val).includes('.');
+      const decimals = isDecimal ? (String(c.val).split('.')[1]||'').length : 0;
+      const suffix = String(c.val).replace(/[\d.+\-]/g,'');
+      const prefix = isPos ? '+' : isNeg ? '-' : '';
+      const duration = 1800; // slower = 1.8 seconds
+      const startTime = performance.now();
+      function tick(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = num * eased;
+        el.textContent = prefix + (decimals > 0 ? current.toFixed(decimals) : Math.floor(current)) + suffix;
+        if (progress < 1) requestAnimationFrame(tick);
+        else el.textContent = c.val; // snap to exact final value
+      }
+      requestAnimationFrame(tick);
+    }, delay);
+  });
 
   // Stat pills - Top Scorer, Wins Leader, Most MVPs
   const pillPpg  = document.getElementById('hero-pill-ppg');
