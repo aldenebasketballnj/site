@@ -381,9 +381,15 @@ function csvToObjects(text) {
   return lines.slice(1).map(line => {
     const cells = parseCSVLine(line);
     const obj = {};
-    headers.forEach((h,i) => { obj[h.trim()] = (cells[i]||'').trim(); });
+    // Use positional keys for duplicate/blank headers
+    headers.forEach((h,i) => {
+      const key = h.trim() || ('_col'+i);
+      obj[key] = (cells[i]||'').trim();
+    });
+    // Always store positional array too
+    obj._cells = cells.map(c=>(c||'').trim());
     return obj;
-  }).filter(r => Object.values(r).some(v => v.trim()));
+  }).filter(r => r._cells && r._cells.some(v=>v.trim()));
 }
 function parseCSVLine(line) {
   const cells=[]; let cur=''; let inQ=false;
@@ -451,7 +457,9 @@ function buildPlayer(row) {
   if(low==='player'||low==='name'||low.includes('total')||low===''||low.includes('group average')||low.includes('average'))return null;
   const gp=n(g(row,'GP','G'));
   if(gp===0)return null;
-  const p=(i)=>String(row[keys[i]]||'').trim();
+  // Use _cells for positional access (sheet has blank column headers)
+  const cells_b = row._cells || [];
+  const p=(i)=>String(cells_b[i]||row[keys[i]]||'').trim();
   return {
     name, gp,
     ppg:  n(g(row,'PPG')||p(2)),
@@ -772,9 +780,9 @@ function buildAvgSection(rows, t) {
   let curStyle=FALLBACK_STYLES[0], fbIdx=0;
 
   rows.forEach((r,ri)=>{
-    const rkeys=Object.keys(r);
-    const pos=(i)=>String(r[rkeys[i]]||'').trim();
-    const name=pos(0); if(!name)return;
+    const cells_r = r._cells || [];
+    const name = (cells_r[0]||'').trim();
+    if(!name)return;
     const up=name.toUpperCase();
     if(up==='PLAYER'||up==='NAME')return;
 
@@ -789,7 +797,7 @@ function buildAvgSection(rows, t) {
 
     // Totals row - styled differently
     if(up==='TOTALS'||up==='TOTAL'){
-      const pf=(i)=>pos(i)||'-';
+      const pf=(i)=>(cells_r[i]||'-');
       teamSections+=`<tr style="background:${curStyle.bg};opacity:0.6;font-style:italic;">
         <td style="text-align:left;padding-left:14px;font-size:11px;color:var(--chalk-dim)">Totals</td>
         ${[1,2,3,4,5,6,7,8,9,10,11,12,13].map(i=>`<td style="font-size:11px;color:var(--chalk-dim)">${clean(pf(i))}</td>`).join('')}
@@ -798,14 +806,20 @@ function buildAvgSection(rows, t) {
     }
 
     // Player row
-    // Cols: Name,GP,PPG,FGM,FGA,FG%,3PM,3PA,3P%,RPG,APG,SPG,BPG,TOPG,+/-,W,L,WIN%
-    const pf=(i)=>parseFloat(pos(i))||0;
+    // Use _cells array for positional access - headers are blank/duplicate in this sheet
+    // Stats tab layout from screenshot:
+    // col0=Name, col1=GP, col2=PPG, col3=RPG, col4=APG, col5=SPG, col6=BPG
+    // col7=TOPG, col8=+/-, col9=FGM, col10=FGA, col11=FG%, col12=3PM, col13=3PA, col14=3FG%
+    const cells = r._cells || [];
+    const c = (i) => (cells[i]||'').trim();
+    const pf=(i)=>parseFloat(c(i))||0;
     const rgp  =pf(1)||1;
-    const rppg =pf(2); const rfgm=pos(3); const rfga=pos(4); const rfgp=pos(5);
-    const r3pm =pos(6); const r3pa=pos(7); const r3p=pos(8);
-    const rrpg =pf(9);  const rapg=pf(10); const rspg=pf(11);
-    const rbpg =pf(12); const rtopg=pf(13);
-    const rpm  =n(pos(14));
+    const rppg =pf(2);
+    const rrpg =pf(3);  const rapg=pf(4);  const rspg=pf(5);
+    const rbpg =pf(6);  const rtopg=pf(7);
+    const rpm  =n(c(8));
+    const rfgm =c(9);   const rfga=c(10);  const rfgp=c(11);
+    const r3pm =c(12);  const r3pa=c(13);  const r3p=c(14);
     teamSections+=`<tr style="background:${curStyle.bg}">
       <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${esc(name)}')">${name}</td>
       <td>${rgp}</td>
@@ -870,7 +884,8 @@ function buildGamesSection(rows, t) {
     const teams=[]; let curTeam=null, curTs=FALLBACK_STYLES[0], fbi=0;
 
     rows.forEach(row=>{
-      const cellVal=String(row[gameCol]||'').trim();
+      // Use _cells[colIdx] for positional access since headers may be blank
+      const cellVal=String((row._cells&&row._cells[colIdx])||row[gameCol]||'').trim();
       if(!cellVal)return;
       const up=cellVal.toUpperCase();
 
