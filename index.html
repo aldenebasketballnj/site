@@ -68,11 +68,15 @@ body.light-mode #home-hero .hero-bg-base{background:linear-gradient(160deg,#1111
 #hero-pill-mvp{animation:pillEntrance 0.6s ease forwards,fireGlow 2.5s ease-in-out infinite;animation-delay:1.2s,1.8s;opacity:0;}
 
 /* HERO CARDS */
-@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px);}to{opacity:1;transform:translateX(0);}}
-@keyframes fireFlickerHover{0%,100%{box-shadow:0 0 8px rgba(255,100,0,0.7),0 0 20px rgba(255,60,0,0.4),0 0 40px rgba(200,144,42,0.3);}25%{box-shadow:0 0 14px rgba(255,140,0,1),0 0 28px rgba(255,80,0,0.6),0 0 55px rgba(200,144,42,0.5);}75%{box-shadow:0 0 16px rgba(255,160,0,1),0 0 32px rgba(255,100,0,0.7),0 0 60px rgba(200,144,42,0.55);}}
-.hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.2s,transform 0.2s;opacity:0;animation:slideInLeft 0.5s ease forwards;}
+@keyframes fireFlickerHover{
+  0%,100%{box-shadow:0 0 8px rgba(255,100,0,0.7),0 0 20px rgba(255,60,0,0.4),0 0 40px rgba(200,144,42,0.3);}
+  25%{box-shadow:0 0 14px rgba(255,140,0,1),0 0 28px rgba(255,80,0,0.6),0 0 55px rgba(200,144,42,0.5);}
+  50%{box-shadow:0 0 10px rgba(255,60,0,0.8),0 0 22px rgba(200,80,0,0.5),0 0 45px rgba(200,144,42,0.4);}
+  75%{box-shadow:0 0 16px rgba(255,160,0,1),0 0 32px rgba(255,100,0,0.7),0 0 60px rgba(200,144,42,0.55);}
+}
+.hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;cursor:pointer;transition:border-color 0.2s,transform 0.2s;}
 .hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}
-.hcard:hover{border-color:rgba(200,144,42,0.6);transform:translateY(-3px);animation:fireFlickerHover 0.6s ease-in-out infinite;}
+.hcard:hover{border-color:rgba(200,144,42,0.6);transform:translateY(-3px);animation:fireFlickerHover 0.5s ease-in-out infinite;}
 .hcard-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:8px;}
 .hcard-val{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:var(--gold-light);line-height:1;margin-bottom:6px;overflow:hidden;}
 .hcard-name{font-size:14px;font-weight:600;color:var(--chalk);}
@@ -146,8 +150,8 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 /* NBA TICKER */
 @keyframes tickerScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
 #nba-ticker-wrap{display:none;}
-#nba-ticker{white-space:nowrap;font-size:11px;color:var(--chalk-mid);animation:tickerScroll 40s linear infinite;}
-#nba-ticker:hover{animation-play-state:paused;}
+#nba-ticker{white-space:nowrap;font-size:12px;color:var(--chalk-mid);animation:tickerScroll 60s linear infinite;letter-spacing:0.01em;}
+#nba-ticker:hover{animation-play-state:paused;cursor:default;}
 @media(min-width:641px){#nba-ticker-wrap{display:block;}}
 
 /* LIGHT MODE */
@@ -341,7 +345,7 @@ body.light-mode nav{background:#F5F3EE;}
       </div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-      <div style="font-size:12px;color:var(--chalk-dim);">Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.13</span></div>
+      <div style="font-size:12px;color:var(--chalk-dim);">Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.14</span></div>
       <div style="display:flex;align-items:center;gap:10px;">
         <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
         <div id="theme-toggle" onclick="toggleTheme()" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background 0.3s;border:1px solid var(--chalk-dim);">
@@ -465,7 +469,7 @@ function renderHero(){
   ];
   const cardCols=['ppg','rpg','apg','spg','bpg','fgPct','threePct','w','pm'];
   document.getElementById('hero-grid').innerHTML=cards.map((c,i)=>`
-    <div class="hcard" onclick="goLeaderboard('${cardCols[i]||'ppg'}')" style="animation-delay:${i*0.07}s">
+    <div class="hcard" onclick="goLeaderboard('${cardCols[i]||'ppg'}')" >
       <div class="hcard-lbl">${c.lbl}</div>
       <div class="hcard-val" id="hcard-val-${i}" style="opacity:0;transition:opacity 0.4s;">${c.val}</div>
       <div class="hcard-name">${c.name}</div>
@@ -865,19 +869,63 @@ if(localStorage.getItem('abg-theme')==='light'){
 
 // NBA NEWS TICKER
 async function loadNBATicker(){
+  const el=document.getElementById('nba-ticker');
+  if(!el)return;
   try{
-    const url='https://corsproxy.io/?'+encodeURIComponent('https://www.espn.com/espn/rss/nba/news');
-    const res=await fetch(url);const txt=await res.text();
-    const parser=new DOMParser();const xml=parser.parseFromString(txt,'text/xml');
-    const items=Array.from(xml.querySelectorAll('item')).slice(0,12);
-    if(items.length){
-      const headlines=items.map(item=>{const title=item.querySelector('title')?.textContent||'';return '&#127936; '+title;}).join('&nbsp;&nbsp;&bull;&nbsp;&nbsp;');
-      const el=document.getElementById('nba-ticker');
-      if(el){el.innerHTML=headlines+'&nbsp;&nbsp;&bull;&nbsp;&nbsp;'+headlines;el.style.animationDuration=Math.max(30,headlines.length*0.04)+'s';}
+    // Try ESPN NBA RSS via multiple proxies
+    const proxies=[
+      'https://corsproxy.io/?'+encodeURIComponent('https://www.espn.com/espn/rss/nba/news'),
+      'https://api.allorigins.win/get?url='+encodeURIComponent('https://www.espn.com/espn/rss/nba/news'),
+    ];
+    let txt='';
+    for(const url of proxies){
+      try{
+        const res=await fetch(url,{signal:AbortSignal.timeout(5000)});
+        if(res.ok){
+          const data=await res.json().catch(()=>null);
+          txt=data?(data.contents||data):await res.text();
+          if(txt&&txt.includes('<item>'))break;
+        }
+      }catch(e){continue;}
     }
-  }catch(e){const el=document.getElementById('nba-ticker');if(el)el.textContent='NBA news unavailable';}
+    if(txt&&txt.includes('<item>')){
+      const parser=new DOMParser();
+      const xml=parser.parseFromString(txt,'text/xml');
+      const items=Array.from(xml.querySelectorAll('item')).slice(0,15);
+      if(items.length){
+        const headlines=items.map(item=>{
+          const title=(item.querySelector('title')?.textContent||'').replace(/\s+/g,' ').trim();
+          const desc=(item.querySelector('description')?.textContent||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0,80);
+          return title+(desc?' -- '+desc:'');
+        }).join('     •     ');
+        // Duplicate 3 times for very long seamless loop
+        el.innerHTML=headlines+'     •     '+headlines+'     •     '+headlines;
+        const spd=Math.max(60,el.innerHTML.length*0.055);
+        el.style.animationDuration=spd+'s';
+        console.log('NBA ticker loaded:',items.length,'stories, duration:',spd+'s');
+        return;
+      }
+    }
+    throw new Error('No RSS items found');
+  }catch(e){
+    console.warn('NBA ticker fallback:', e.message);
+    // Fallback static headlines so ticker always shows something
+    const fallback=[
+      'NBA news loading -- check ESPN.com for latest updates',
+      'Follow your favorite teams on the NBA app',
+      'ABG Stats -- Aldene Basketball Group Est. 2018',
+      'Run it back. The numbers do not lie.',
+      'Henry Cup VII Champions -- Team White',
+    ].join('     •     ');
+    el.innerHTML=fallback+'     •     '+fallback;
+    el.style.animationDuration='45s';
+  }
 }
-if(window.innerWidth>=641){loadNBATicker();setInterval(loadNBATicker,5*60*1000);}
+if(window.innerWidth>=641){
+  // Small delay so it doesn't compete with main data load
+  setTimeout(loadNBATicker, 2000);
+  setInterval(loadNBATicker,5*60*1000);
+}
 
 // LOAD
 function setMsg(m){const el=document.getElementById('load-msg');if(el)el.textContent=m;}
