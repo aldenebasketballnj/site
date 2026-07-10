@@ -110,6 +110,39 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 .tourney-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:11px;margin-bottom:26px;}
 .tcard{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all 0.18s;}
 .tcard:hover{border-color:var(--gold);transform:translateY(-2px);}
+
+/* Henry Cup done card */
+.tcard-done{
+  background:linear-gradient(135deg,var(--panel) 0%,rgba(200,144,42,0.08) 100%);
+  border:1px solid rgba(200,144,42,0.35) !important;
+  box-shadow:0 0 16px rgba(200,144,42,0.08);
+}
+.tcard-done:hover{
+  transform:translateY(-4px);
+  animation:flashFloat 0.6s ease-in-out infinite alternate;
+  box-shadow:0 0 28px rgba(200,144,42,0.35),0 8px 24px rgba(200,144,42,0.15);
+  border-color:var(--gold-light) !important;
+}
+@keyframes flashFloat{
+  0%  { transform:translateY(-4px); box-shadow:0 0 16px rgba(200,144,42,0.25),0 6px 20px rgba(200,144,42,0.1); }
+  100%{ transform:translateY(-8px); box-shadow:0 0 36px rgba(200,144,42,0.5),0 12px 32px rgba(200,144,42,0.25); }
+}
+
+/* In Progress card */
+.tcard-wip{opacity:0.7;}
+.tcard-wip:hover{opacity:1;border-color:var(--chalk-dim) !important;transform:translateY(-2px);}
+
+/* Basketball arc animation */
+@keyframes ballArc{
+  0%  { transform:translate(0,0) rotate(0deg); }
+  40% { transform:translate(80px,-100px) rotate(180deg); }
+  70% { transform:translate(130px,-40px) rotate(300deg); }
+  85% { transform:translate(145px,10px) rotate(360deg); }
+  90% { transform:translate(140px,0px) rotate(370deg); }
+  95% { transform:translate(135px,8px) rotate(375deg); }
+  100%{ transform:translate(0,0) rotate(0deg); }
+}
+.bball-anim{ animation:ballArc 2.2s cubic-bezier(0.4,0,0.6,1) infinite; animation-delay:0.5s; }
 .tcard-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;text-transform:uppercase;margin-bottom:3px;}
 .tcard-date{font-size:11px;color:var(--chalk-dim);margin-bottom:12px;}
 
@@ -328,7 +361,7 @@ body.light-mode nav{background:#F5F3EE;}
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:fixed;bottom:0;left:0;right:0;z-index:99;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.5</span>
+      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.7</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
@@ -721,18 +754,51 @@ function goPlayer(name){showPage('players');openProfile(name);}
 
 // TOURNAMENTS
 function renderTournaments(){
+  // Only Henry Cup VII is fully built
+  const COMPLETE = new Set(['CUP_VII']);
+
   document.getElementById('tourney-grid').innerHTML=Object.keys(TABS).map(key=>{
     const t=TABS[key];
     const rows=(tourneyData[key]||[]).filter(r=>{const nm=r[Object.keys(r)[0]]||'';return nm.length>1&&!nm.toLowerCase().includes('total');});
-    return `<div class="tcard" onclick="openTourney('${key}')">
-      <div class="tcard-name">${t.label}</div>
-      <div class="tcard-date">${t.date} &middot; ${rows.length>0?rows.length+' Players':'No data'}</div>
-      <div class="pcard-stats" style="margin-top:10px">
-        <div class="ms"><span class="ms-v gld">${rows.length}</span><span class="ms-l">Players</span></div>
-        <div class="ms"><span class="ms-v">${rows.length>0?'&#10003;':'&mdash;'}</span><span class="ms-l">Stats</span></div>
-        <div class="ms"><span class="ms-v" style="color:var(--gold)">&rarr;</span><span class="ms-l">View</span></div>
-      </div>
-    </div>`;
+    const isDone = COMPLETE.has(key);
+
+    if(isDone) {
+      // Henry Cup - gold glowing card with "Updated" badge + flash/float on hover
+      return `<div class="tcard tcard-done" onclick="openTourney('${key}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div class="tcard-name" style="color:var(--gold-light)">${t.label}</div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;
+            letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:10px;
+            background:rgba(42,157,92,0.2);color:#2ecc71;border:1px solid rgba(42,157,92,0.4);">
+            &#10003; Updated
+          </span>
+        </div>
+        <div class="tcard-date">${t.date} &middot; ${rows.length} Players</div>
+        <div class="pcard-stats" style="margin-top:10px">
+          <div class="ms"><span class="ms-v gld">${rows.length}</span><span class="ms-l">Players</span></div>
+          <div class="ms"><span class="ms-v" style="color:#2ecc71">&#10003;</span><span class="ms-l">Stats</span></div>
+          <div class="ms"><span class="ms-v" style="color:var(--gold)">&rarr;</span><span class="ms-l">View</span></div>
+        </div>
+      </div>`;
+    } else {
+      // In Progress card
+      return `<div class="tcard tcard-wip" onclick="openTourneyWip('${key}','${t.label}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div class="tcard-name">${t.label}</div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;
+            letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:10px;
+            background:rgba(200,144,42,0.1);color:var(--chalk-dim);border:1px solid var(--border);">
+            In Progress
+          </span>
+        </div>
+        <div class="tcard-date">${t.date} &middot; ${rows.length>0?rows.length+' Players':'Coming Soon'}</div>
+        <div class="pcard-stats" style="margin-top:10px">
+          <div class="ms"><span class="ms-v" style="color:var(--chalk-dim)">${rows.length||'?'}</span><span class="ms-l">Players</span></div>
+          <div class="ms"><span class="ms-v" style="color:var(--chalk-dim)">&#8987;</span><span class="ms-l">Stats</span></div>
+          <div class="ms"><span class="ms-v" style="color:var(--chalk-dim)">&rarr;</span><span class="ms-l">View</span></div>
+        </div>
+      </div>`;
+    }
   }).join('');
 }
 
@@ -821,7 +887,7 @@ function renderHenryCupVII() {
     const hdr = `<tr><td colspan="15" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:11px 14px;">${teamName}</td></tr>`;
     const rows = players.map(p=>{
       const pm = parseFloat(p[8]);
-      const pmColor = pm>0?'color:var(--green);font-weight:700':pm<0?'color:var(--red);font-weight:700':'';
+      const pmColor = pm<0?'color:var(--red);font-weight:700':'';
       return `<tr><td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${p[0]}')">${p[0]}</td>
         <td>${p[1]}</td><td class="tg">${p[2]}</td><td>${p[3]}</td><td>${p[4]}</td><td>${p[5]}</td><td>${p[6]}</td><td>${p[7]}</td>
         <td style="${pmColor}">${p[8]}</td><td>${p[9]}</td><td>${p[10]}</td><td>${p[11]}</td><td>${p[12]}</td><td>${p[13]}</td><td>${p[14]}</td>
@@ -885,7 +951,7 @@ function renderHenryCupVII() {
       const hdr = `<tr><td colspan="12" style="background:${ts.bg};border-top:${ts.border};font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:${ts.label};padding:10px 14px;">${name}</td></tr>`;
       const prows = players.map(p=>{
         const pm=parseFloat(p[12].replace('+',''));
-        const pmc=pm>0?'color:var(--green);font-weight:700':pm<0?'color:var(--red);font-weight:700':'';
+        const pmc=pm<0?'color:var(--red);font-weight:700':'';
         return `<tr style="background:${ts.bg}">
           <td class="tlink" style="text-align:left;padding-left:22px" onclick="goPlayer('${p[0]}')">${p[0]}</td>
           <td>${p[1]}/${p[2]}</td><td>${p[3]}</td><td class="tg">${p[4]}</td>
@@ -1056,6 +1122,58 @@ function renderHenryCupVII() {
 
   document.getElementById('t-avg-section').innerHTML = leadersHtml + teamStatsHtml;
   document.getElementById('t-games-section').innerHTML = gamesHtml;
+}
+
+function openTourneyWip(key, label){
+  document.getElementById('tournaments-list').style.display='none';
+  document.getElementById('tournament-detail').style.display='block';
+  window.scrollTo(0,0);
+  document.getElementById('tourney-content').innerHTML=`
+    <div style="text-align:center;padding:60px 20px 80px;">
+      <!-- Basketball missing shot animation -->
+      <div style="position:relative;width:220px;height:220px;margin:0 auto 32px;">
+        <!-- Backboard -->
+        <div style="position:absolute;top:0;right:20px;width:60px;height:44px;
+          border:3px solid var(--chalk-dim);border-radius:4px;background:rgba(255,255,255,0.03);">
+          <!-- Hoop -->
+          <div style="position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);
+            width:36px;height:10px;border:3px solid var(--red);border-radius:50%;background:none;"></div>
+          <!-- Net lines -->
+          <div style="position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);
+            width:28px;height:18px;border-left:2px solid var(--chalk-dim);border-right:2px solid var(--chalk-dim);
+            border-bottom:2px solid var(--chalk-dim);border-radius:0 0 8px 8px;opacity:0.3;"></div>
+        </div>
+
+        <!-- Basketball with arc animation -->
+        <div class="bball-anim" style="position:absolute;bottom:40px;left:10px;">
+          <div style="width:48px;height:48px;border-radius:50%;
+            background:radial-gradient(circle at 35% 35%, #e8823a, #c0572a);
+            border:2px solid #a04020;position:relative;overflow:hidden;">
+            <!-- Ball lines -->
+            <div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(0,0,0,0.3);transform:translateY(-50%);"></div>
+            <div style="position:absolute;top:0;bottom:0;left:50%;width:2px;background:rgba(0,0,0,0.3);transform:translateX(-50%);"></div>
+            <div style="position:absolute;top:10%;left:-10%;right:-10%;height:2px;background:rgba(0,0,0,0.2);border-radius:50%;transform:rotate(-20deg);"></div>
+          </div>
+        </div>
+
+        <!-- Floor line -->
+        <div style="position:absolute;bottom:28px;left:0;right:0;height:2px;
+          background:linear-gradient(to right,transparent,var(--border),transparent);"></div>
+      </div>
+
+      <!-- Title -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;
+        text-transform:uppercase;letter-spacing:0.04em;color:var(--chalk);margin-bottom:8px;">
+        ${label}
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;
+        letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;">
+        Stats Coming Soon
+      </div>
+      <div style="font-size:13px;color:var(--chalk-dim);max-width:320px;margin:0 auto;line-height:1.6;">
+        We're working on getting these stats up. Check back soon!
+      </div>
+    </div>`;
 }
 
 function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
