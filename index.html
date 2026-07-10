@@ -144,6 +144,34 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 }
 .bball-anim{ animation:ballArc 2.2s cubic-bezier(0.4,0,0.6,1) infinite; animation-delay:0.5s; }
 .tcard-name{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:900;text-transform:uppercase;margin-bottom:3px;}
+
+/* BURGER MENU */
+.burger-line{width:22px;height:2px;background:var(--chalk);margin:4px 0;border-radius:2px;transition:all 0.3s;}
+#burger.open .burger-line:nth-child(1){transform:rotate(45deg) translate(4px,4px);}
+#burger.open .burger-line:nth-child(2){opacity:0;}
+#burger.open .burger-line:nth-child(3){transform:rotate(-45deg) translate(4px,-4px);}
+
+@media(max-width:640px){
+  #burger{display:flex !important;flex-direction:column;align-items:center;justify-content:center;}
+  #main-nav{
+    display:none;
+    position:fixed;
+    top:54px;right:0;
+    width:220px;
+    background:var(--panel);
+    border-left:1px solid var(--border);
+    border-bottom:1px solid var(--border);
+    border-radius:0 0 0 12px;
+    flex-direction:column;
+    padding:8px 0;
+    z-index:99;
+    box-shadow:-4px 4px 24px rgba(0,0,0,0.4);
+  }
+  #main-nav.open{display:flex !important;}
+  .tab{height:48px;padding:0 20px;justify-content:flex-start;border-bottom:none;border-left:2px solid transparent;width:100%;}
+  .tab.active{border-left-color:var(--gold);border-bottom:none;background:rgba(200,144,42,0.08);}
+  #mobile-overlay.open{display:block !important;}
+}
 .tcard-date{font-size:11px;color:var(--chalk-dim);margin-bottom:12px;}
 
 /* ── HERO TITLE ── */
@@ -231,13 +259,19 @@ body.light-mode nav{background:#F5F3EE;}
 
 <header>
   <div class="logo" onclick="showPage('home')"><div class="logo-dot"></div>Aldene <span>Basketball</span></div>
-  <nav>
-    <button class="tab active" data-page="home" onclick="showPage('home')">Home</button>
-    <button class="tab" data-page="players" onclick="showPage('players')">Players</button>
-    <button class="tab" data-page="leaderboard" onclick="showPage('leaderboard')">Leaderboard</button>
-    <button class="tab" data-page="tournaments" onclick="showPage('tournaments')">Tournaments</button>
+  <nav id="main-nav">
+    <button class="tab active" data-page="home" onclick="showPage('home');closeMenu()">Home</button>
+    <button class="tab" data-page="players" onclick="showPage('players');closeMenu()">Players</button>
+    <button class="tab" data-page="leaderboard" onclick="showPage('leaderboard');closeMenu()">Leaderboard</button>
+    <button class="tab" data-page="tournaments" onclick="showPage('tournaments');closeMenu()">Tournaments</button>
   </nav>
+  <button id="burger" onclick="toggleMenu()" aria-label="Menu" style="display:none;background:none;border:none;cursor:pointer;padding:8px;flex-shrink:0;">
+    <div class="burger-line"></div>
+    <div class="burger-line"></div>
+    <div class="burger-line"></div>
+  </button>
 </header>
+<div id="mobile-overlay" onclick="closeMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:98;"></div>
 
 <main>
   <div id="err" class="err"></div>
@@ -361,7 +395,7 @@ body.light-mode nav{background:#F5F3EE;}
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:fixed;bottom:0;left:0;right:0;z-index:99;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.7</span>
+      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.8</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
@@ -1179,6 +1213,19 @@ function openTourneyWip(key, label){
 function closeTourney(){document.getElementById('tournaments-list').style.display='block';document.getElementById('tournament-detail').style.display='none';}
 
 // PAGE NAV
+function toggleMenu(){
+  const nav=document.getElementById('main-nav');
+  const burger=document.getElementById('burger');
+  const overlay=document.getElementById('mobile-overlay');
+  const isOpen=nav.classList.toggle('open');
+  burger.classList.toggle('open',isOpen);
+  overlay.classList.toggle('open',isOpen);
+}
+function closeMenu(){
+  document.getElementById('main-nav').classList.remove('open');
+  document.getElementById('burger').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('open');
+}
 function showPage(page){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===page));
