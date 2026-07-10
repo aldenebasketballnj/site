@@ -56,10 +56,19 @@ main{max-width:1140px;width:100%;margin:0 auto;padding:22px 14px 80px;}
 
 /* HERO CARDS */
 .hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:32px;}
-.hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;}
+.hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;}
 .hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}
+.hcard:hover{border-color:rgba(200,144,42,0.6);transform:translateY(-3px);}
+.hcard:hover .hcard-fire{opacity:1;}
+@keyframes fireFlicker{
+  0%,100%{box-shadow:0 0 8px rgba(255,100,0,0.7),0 0 20px rgba(255,60,0,0.4),0 0 40px rgba(200,144,42,0.3);}
+  25%{box-shadow:0 0 14px rgba(255,140,0,1),0 0 28px rgba(255,80,0,0.6),0 0 55px rgba(200,144,42,0.5);}
+  50%{box-shadow:0 0 10px rgba(255,60,0,0.8),0 0 22px rgba(200,80,0,0.5),0 0 45px rgba(200,144,42,0.4);}
+  75%{box-shadow:0 0 16px rgba(255,160,0,1),0 0 32px rgba(255,100,0,0.7),0 0 60px rgba(200,144,42,0.55);}
+}
+.hcard:hover{animation:fireFlicker 0.6s ease-in-out infinite;}
 .hcard-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:8px;}
-.hcard-val{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:var(--gold-light);line-height:1;margin-bottom:6px;}
+.hcard-val{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:var(--gold-light);line-height:1;margin-bottom:6px;overflow:hidden;}
 .hcard-name{font-size:14px;font-weight:600;color:var(--chalk);}
 
 /* ROSTER */
@@ -97,7 +106,7 @@ thead th:first-child{text-align:left;}
 tbody tr{border-bottom:1px solid rgba(37,37,40,0.7);transition:background 0.1s;}
 tbody tr:last-child{border-bottom:none;}
 tbody tr:hover{background:rgba(200,144,42,0.04);}
-tbody td{padding:9px 11px;text-align:right;color:var(--chalk-dim);font-variant-numeric:tabular-nums;white-space:nowrap;}
+tbody td{padding:9px 11px;text-align:right;color:var(--chalk-mid);font-variant-numeric:tabular-nums;white-space:nowrap;}
 tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-family:'Barlow Condensed',sans-serif;font-size:14px;}
 .tp{color:var(--green)!important;font-weight:700;}.tn{color:var(--red)!important;font-weight:700;}.tg{color:var(--gold-light)!important;font-weight:700;}
 .tlink{cursor:pointer;}.tlink:hover{color:var(--gold-light)!important;}
@@ -174,6 +183,11 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 }
 .tcard-date{font-size:11px;color:var(--chalk-dim);margin-bottom:12px;}
 
+/* ── MOBILE PILLS ── */
+@media(max-width:640px){
+  #hero-pills{ flex-direction:column; align-items:center; gap:8px; }
+  #hero-pills > div{ width:80%; text-align:center; }
+}
 /* ── HERO TITLE ── */
 @keyframes heroTitle {
   from { opacity:0; transform:translateY(20px); }
@@ -314,7 +328,7 @@ body.light-mode nav{background:#F5F3EE;}
         </div>
 
         <!-- Stat pills -->
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;" id="hero-pills">
           <div id="hero-pill-ppg"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border-radius:20px;border:1px solid rgba(200,144,42,0.35);color:rgba(232,172,74,0.95);background:rgba(200,144,42,0.1);">Top Scorer: --</div>
           <div id="hero-pill-wins" style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border-radius:20px;border:1px solid rgba(238,234,226,0.15);color:rgba(238,234,226,0.65);background:rgba(238,234,226,0.05);">Wins Leader: --</div>
           <div id="hero-pill-mvp"  style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 18px;border-radius:20px;border:1px solid rgba(238,234,226,0.15);color:rgba(238,234,226,0.65);background:rgba(238,234,226,0.05);">MVP: --</div>
@@ -322,7 +336,7 @@ body.light-mode nav{background:#F5F3EE;}
       </div>
     </div>
 
-    <div class="sl">Circuit Leaders</div>
+    <div class="sl">Tournament Stat Leaders</div>
     <div id="hero-grid" class="hero-grid"></div>
   </div>
 
@@ -395,7 +409,7 @@ body.light-mode nav{background:#F5F3EE;}
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:fixed;bottom:0;left:0;right:0;z-index:99;">
   <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
     <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.8</span>
+      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.9</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
@@ -572,8 +586,9 @@ function renderHero() {
     {lbl:'Most Wins',       val:byW[0].w,                 name:byW[0].name},
     {lbl:'+/- Leader',      val:pm(byPm[0].pm_val),       name:byPm[0].name},
   ];
+  const cardCols = ['ppg','rpg','apg','spg','bpg','fgPct','threePct','w','pm'];
   document.getElementById('hero-grid').innerHTML=cards.map((c,i)=>`
-    <div class="hcard">
+    <div class="hcard" onclick="goLeaderboard('${cardCols[i]||'ppg'}')">
       <div class="hcard-lbl">${c.lbl}</div>
       <div class="hcard-val" id="hcard-val-${i}" style="opacity:0;transition:opacity 0.4s;">${c.val}</div>
       <div class="hcard-name">${c.name}</div>
@@ -639,7 +654,7 @@ function renderRoster() {
     <div class="pcard" onclick="openProfile('${esc(p.name)}')">
       <div class="pcard-bg">${p.gp}</div>
       <div class="pcard-name">${p.name}</div>
-      <div class="pcard-meta">${p.gp} GP &middot; ${p.w}W-${p.l}L &middot; ${p.winPct}</div>
+      <div class="pcard-meta">${p.gp} GP &middot; ${p.w}W-${p.l}L &middot; ${p.winPct}${p.age>0?' &middot; Age '+p.age:''}</div>
       <div class="pcard-stats">
         <div class="ms"><span class="ms-v gld">${p.ppg.toFixed(1)}</span><span class="ms-l">PTS</span></div>
         <div class="ms"><span class="ms-v gld">${p.rpg.toFixed(1)}</span><span class="ms-l">REB</span></div>
@@ -690,7 +705,7 @@ function openProfile(name) {
     <div class="prof-hero">
       <div class="prof-hero-bg">${p.gp}</div>
       <div class="prof-name">${p.name}</div>
-      <div class="prof-sub">${p.gp} GP &middot; ${p.w}W-${p.l}L &middot; ${p.winPct} Win Rate${p.potg>0?' &middot; '+Math.round(p.potg)+'x MVP':''}</div>
+      <div class="prof-sub">${p.gp} GP &middot; ${p.w}W-${p.l}L &middot; ${p.winPct} Win Rate${p.age>0?' &middot; Age '+p.age:''}${p.potg>0?' &middot; '+Math.round(p.potg)+'x MVP':''}</div>
       <div class="cstat-grid">
         <div class="cstat"><span class="cstat-v gld">${pm(p.pm_val)}</span><span class="cstat-l">+/-</span></div>
         <div class="cstat"><span class="cstat-v">${p.ppg.toFixed(1)}</span><span class="cstat-l">PPG</span></div>
@@ -785,6 +800,11 @@ function renderLeaderboard(){
   });
 }
 function goPlayer(name){showPage('players');openProfile(name);}
+function goLeaderboard(col){
+  lbSortCol=col; lbSortAsc=false;
+  showPage('leaderboard');
+  updateSortHeaders(); renderLbTable();
+}
 
 // TOURNAMENTS
 function renderTournaments(){
