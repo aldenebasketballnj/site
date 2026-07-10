@@ -56,7 +56,8 @@ main{max-width:1140px;width:100%;margin:0 auto;padding:22px 14px 80px;}
 
 /* HERO CARDS */
 .hero-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:32px;}
-.hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-40px);}to{opacity:1;transform:translateX(0);}}
+.hcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 22px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;opacity:0;animation:slideInLeft 0.5s ease forwards;}
 .hcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);}
 .hcard:hover{border-color:rgba(200,144,42,0.6);transform:translateY(-3px);}
 .hcard:hover .hcard-fire{opacity:1;}
@@ -259,6 +260,7 @@ tbody td:first-child{text-align:left;color:var(--chalk);font-weight:600;font-fam
 /* LIGHT MODE */
 body.light-mode{--black:#F5F3EE;--panel:#FFFFFF;--panel2:#F0EDE8;--border:#DDD9D0;--chalk:#1a1a1a;--chalk-mid:#5a5650;--chalk-dim:#9a9690;--gold:#9a6e1a;--gold-light:#C8902A;--green:#1a7a42;--red:#a02020;}
 body.light-mode header,body.light-mode #site-footer{background:#FFFFFF;}
+@keyframes tickerScroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 body.light-mode nav{background:#F5F3EE;}
 
 .view{display:none;}.view.active{display:block;}
@@ -513,14 +515,28 @@ body.light-mode nav{background:#F5F3EE;}
 </main>
 
 <footer id="site-footer" style="background:var(--panel);border-top:1px solid var(--border);padding:16px 20px;position:fixed;bottom:0;left:0;right:0;z-index:99;">
-  <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-    <div style="font-size:12px;color:var(--chalk-dim);">
-      Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.11</span>
+  <div style="max-width:1140px;margin:0 auto;">
+    <!-- NBA News Ticker - desktop only -->
+    <div id="nba-ticker-wrap" style="display:none;margin-bottom:10px;overflow:hidden;border-bottom:1px solid var(--border);padding-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);white-space:nowrap;flex-shrink:0;">NBA News</span>
+        <div style="overflow:hidden;flex:1;position:relative;">
+          <div id="nba-ticker" style="display:flex;gap:40px;white-space:nowrap;font-size:11px;color:var(--chalk-dim);animation:tickerScroll 30s linear infinite;will-change:transform;">
+            <span id="ticker-content">Loading NBA news...</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
-      <div id="theme-toggle" onclick="toggleTheme()" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background 0.3s;border:1px solid var(--chalk-dim);">
-        <div id="theme-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--chalk-dim);transition:all 0.3s;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="font-size:12px;color:var(--chalk-dim);">
+        Site created by <a href="https://www.instagram.com/thatfilipinolife/" target="_blank" style="color:var(--gold);text-decoration:none;font-weight:600;">That Filipino Life</a> &nbsp;<span style="color:var(--chalk-dim);font-size:10px;letter-spacing:0.1em;">v1.12</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:11px;color:var(--chalk-dim);letter-spacing:0.08em;text-transform:uppercase;">Light Mode</span>
+        <div id="theme-toggle" onclick="toggleTheme()" style="width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;position:relative;transition:background 0.3s;border:1px solid var(--chalk-dim);">
+          <div id="theme-knob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--chalk-dim);transition:all 0.3s;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -694,7 +710,7 @@ function renderHero() {
   ];
   const cardCols = ['ppg','rpg','apg','spg','bpg','fgPct','threePct','w','pm'];
   document.getElementById('hero-grid').innerHTML=cards.map((c,i)=>`
-    <div class="hcard" onclick="goLeaderboard('${cardCols[i]||'ppg'}')">
+    <div class="hcard" onclick="goLeaderboard('${cardCols[i]||'ppg'}')" style="animation-delay:${i*0.07}s">
       <div class="hcard-lbl">${c.lbl}</div>
       <div class="hcard-val" id="hcard-val-${i}" style="opacity:0;transition:opacity 0.4s;">${c.val}</div>
       <div class="hcard-name">${c.name}</div>
@@ -1359,6 +1375,42 @@ function showPage(page){
 }
 
 // THEME
+// NBA News Ticker
+async function loadNBATicker() {
+  try {
+    // Use ESPN NBA news RSS via allorigins proxy
+    const url = 'https://corsproxy.io/?' + encodeURIComponent('https://www.espn.com/espn/rss/nba/news');
+    const res = await fetch(url);
+    const txt = await res.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(txt, 'text/xml');
+    const items = Array.from(xml.querySelectorAll('item')).slice(0, 12);
+    if(items.length) {
+      const headlines = items.map(item => {
+        const title = item.querySelector('title')?.textContent || '';
+        return '🏀 ' + title;
+      }).join('   &nbsp;&nbsp;&bull;&nbsp;&nbsp;   ');
+      // Duplicate for seamless loop
+      const ticker = document.getElementById('ticker-content');
+      if(ticker) {
+        ticker.innerHTML = headlines + '   &nbsp;&nbsp;&bull;&nbsp;&nbsp;   ' + headlines;
+        // Adjust animation speed based on content length
+        const tickerEl = document.getElementById('nba-ticker');
+        if(tickerEl) tickerEl.style.animationDuration = Math.max(20, items.length * 4) + 's';
+      }
+    }
+  } catch(e) {
+    const ticker = document.getElementById('ticker-content');
+    if(ticker) ticker.textContent = '🏀 NBA news unavailable — check ESPN for latest updates';
+  }
+}
+
+// Only load on desktop
+if(window.innerWidth >= 641) {
+  loadNBATicker();
+  setInterval(loadNBATicker, 5 * 60 * 1000); // refresh every 5 min
+}
+
 function toggleTheme(){
   const isLight=document.body.classList.toggle('light-mode');
   document.getElementById('theme-knob').style.left=isLight?'23px':'3px';
@@ -1390,67 +1442,7 @@ async function loadAll(){
       catch(e){console.warn('Could not load',key,e.message);tourneyData[key]=[];}
     }));
     renderAll();
-    // Play boomshakalaka-style sound using Web Audio API
-    function playBoomShaka() {
-      try {
-        const ctx = new (window.AudioContext||window.webkitAudioContext)();
-        const t = ctx.currentTime;
-
-        function playNote(freq, start, dur, vol, type='sine') {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = type;
-          osc.connect(gain); gain.connect(ctx.destination);
-          osc.frequency.setValueAtTime(freq, t+start);
-          gain.gain.setValueAtTime(vol, t+start);
-          gain.gain.exponentialRampToValueAtTime(0.001, t+start+dur);
-          osc.start(t+start); osc.stop(t+start+dur+0.05);
-        }
-
-        // BOOM - deep bass hit
-        playNote(60, 0,    0.3,  0.9, 'sine');
-        playNote(40, 0,    0.4,  0.7, 'sine');
-
-        // SHA - mid punchy hit
-        playNote(180, 0.22, 0.15, 0.6, 'square');
-        playNote(220, 0.22, 0.12, 0.4, 'sine');
-
-        // KA - sharp attack
-        playNote(300, 0.38, 0.1,  0.5, 'square');
-        playNote(150, 0.38, 0.12, 0.4, 'sine');
-
-        // LA - rising finish
-        playNote(400, 0.5,  0.1,  0.5, 'square');
-        playNote(500, 0.55, 0.08, 0.4, 'square');
-        playNote(600, 0.6,  0.15, 0.6, 'sine');
-
-        // KA - final punch
-        playNote(250, 0.72, 0.12, 0.5, 'square');
-        playNote(120, 0.72, 0.2,  0.6, 'sine');
-
-        // Crowd cheer shimmer at the end
-        const bufLen = ctx.sampleRate * 0.6;
-        const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-        const data = buf.getChannelData(0);
-        for(let i=0; i<bufLen; i++) data[i] = (Math.random()*2-1)*0.08;
-        const src = ctx.createBufferSource();
-        const cheerGain = ctx.createGain();
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'bandpass'; filter.frequency.value = 2000; filter.Q.value = 0.5;
-        src.buffer = buf;
-        src.connect(filter); filter.connect(cheerGain); cheerGain.connect(ctx.destination);
-        cheerGain.gain.setValueAtTime(0, t+0.5);
-        cheerGain.gain.linearRampToValueAtTime(1, t+0.75);
-        cheerGain.gain.exponentialRampToValueAtTime(0.001, t+1.1);
-        src.start(t+0.5); src.stop(t+1.15);
-
-      } catch(e) { console.log('Audio not supported:', e.message); }
-    }
-
-    // Play immediately - browsers allow audio on page load if no gesture needed
-    // Also attach to first user interaction as fallback
-    playBoomShaka();
-    document.addEventListener('click', playBoomShaka, {once:true});
+    // Sound removed for performance
 
     const ls=document.getElementById('loading-screen');
     ls.classList.add('fade');
